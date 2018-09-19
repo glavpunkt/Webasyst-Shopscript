@@ -21,7 +21,7 @@ class glavpunktShipping extends waShipping
     protected function calculate()
     {
         // Проверяем, заполнено ли поле "Город"
-        if ($this->getAddress('city') === '') {
+        if (trim($this->getAddress('city')) === '') {
             return [
                 [
                     'rate' => null,
