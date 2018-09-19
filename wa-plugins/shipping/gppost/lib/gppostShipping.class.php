@@ -23,7 +23,7 @@ class gppostShipping extends waShipping
         $city = trim($this->getAddress('city'));
         $street = trim($this->getAddress('street'));
         $zip = trim($this->getAddress('zip'));
-        // Проверяем, заполнено ли поле "Город"
+        // Проверяем, заполнено ли поля адреса и индекса
         if (($city === '' || $street === '') && $zip === '') {
             return [
                 [
