@@ -73,7 +73,7 @@ class gppostShipping extends waShipping
         }
 
         return [
-            'gpCoutier' => [
+            'gpPost' => [
                 //название варианта доставки
                 'name' => 'Почта РФ Главпункт',
                 //ISO3-код валюты, в которой рассчитана  стоимость  доставки
