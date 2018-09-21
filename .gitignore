@@ -1,0 +1,10 @@
+# Ignore
+**/*.*
+**/LICENSE
+**/LICENSE-MIT
+**/README
+**/VERSION
+
+# Allow
+!.gitignore
+!/wa-plugins/shipping/glavpunkt/**
