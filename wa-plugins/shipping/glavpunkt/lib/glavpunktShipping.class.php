@@ -263,7 +263,7 @@ class glavpunktShipping extends waShipping
 
 
     /**
-     * Эта фуккция для добаления окончания слова день по числу
+     * Эта функция для добаления окончания слова день по числу
      *
      * @param $dayNumber
      * @return string
