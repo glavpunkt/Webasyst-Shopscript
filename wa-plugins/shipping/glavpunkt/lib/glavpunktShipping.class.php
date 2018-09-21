@@ -111,6 +111,36 @@ class glavpunktShipping extends waShipping
     }
 
     /**
+     * Возвращает массив полей формы запроса адреса доставки, которые должны запрашиваться у покупателя
+     * во время оформления заказа.
+     *
+     * @see waShipping::requestedAddressFields()
+     * @example <pre>return array(
+     *     // поле запрашивается
+     *     'zip'     => array(),
+     *
+     *     // скрытое поле с указанным вручную значением
+     *     'country' => array('hidden' => true, 'value' => 'rus', 'cost' => true),
+     *
+     *     // параметр 'cost' означает, что значение данного поля используется для
+     *      предварительного расчета стоимости доставки
+     *     'region'  => array('cost' => true),
+     *     'city'    => array(),
+     *
+     *     // поле не запрашивается
+     *     'street'  => false,
+     * );</pre>
+     * @return array|bool Верните false, если плагин не длолжен запрашивать адрес доставки;
+     * верните пустой array(), если все поля адреса должны запрашиваться у покупателя
+     */
+    public function requestedAddressFields()
+    {
+        return [
+            'city' => ['cost' => true]
+        ];
+    }
+
+    /**
      * Пользовательские поля
      *
      * @param waOrder $order
@@ -233,7 +263,7 @@ class glavpunktShipping extends waShipping
 
 
     /**
-     * Эта фуккция для доваления окончания слова день по числу
+     * Эта функция для добаления окончания слова день по числу
      *
      * @param $dayNumber
      * @return string
@@ -247,7 +277,7 @@ class glavpunktShipping extends waShipping
     }
 
     /**
-     * Мы получаем период в виде строки и получаем массив с заполненым днями доставки
+     * Мы получаем период в виде строки и получаем массив с днями доставки
      *
      * @param $period
      * @return array
@@ -269,4 +299,6 @@ class glavpunktShipping extends waShipping
             'minDays' => $min_days
         ];
     }
+
+
 }
