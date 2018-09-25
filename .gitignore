@@ -9,3 +9,4 @@
 !.gitignore
 !/wa-plugins/shipping/glavpunkt/**
 !/wa-plugins/shipping/gppost/**
+!/wa-plugins/shipping/gppunkts/**
