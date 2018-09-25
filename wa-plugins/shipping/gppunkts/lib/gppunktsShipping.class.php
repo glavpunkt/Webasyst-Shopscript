@@ -29,8 +29,7 @@ class gppunktsShipping extends waShipping
             return [
                 [
                     'rate' => null,
-                    'comment' => 'Выберите пункт выдачи' .
-                        print_r($this->getPackageProperty('selectedPunktId'), true),
+                    'comment' => 'Выберите пункт выдачи'
                 ]
             ];
         }
