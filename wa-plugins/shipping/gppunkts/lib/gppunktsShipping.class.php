@@ -14,6 +14,19 @@ class gppunktsShipping extends waShipping
      * Расчёт стоимости доставки и вывод её
      *
      * @return array
+     * [
+     *  // идентификатор варианта доставки
+     *  'punkts' => [
+     *      // название варианта доставки
+     *      'name' => 'Вариант доставки',
+     *      // валюта, в которой проводился расчёт
+     *      'currency' => 'RUB',
+     *      // произвольная строка, содержащая  информацию о примерном времени доставки
+     *      'est_delivery' => 'от 2 до 5 дней',
+     *      // точная стоимость доставки
+     *      'rate' => $answer['tarif']
+     *  ]
+     *]
      */
     protected function calculate()
     {
@@ -25,7 +38,7 @@ class gppunktsShipping extends waShipping
         $cityTo = $storage->get($keyCity);
         $text = $storage->get($keyText);
 
-        if ($punktId === '') {
+        if (trim($punktId) === '') {
             return [
                 [
                     'rate' => null,
@@ -76,7 +89,7 @@ class gppunktsShipping extends waShipping
                 'name' => $text,
                 'currency' => $this->currency,
                 // произвольная строка, содержащая  информацию о примерном времени доставки
-                'est_delivery' => $this->GetIntervalFromPeriod($answer['period'])['description'],
+                'est_delivery' => $this->getIntervalFromPeriod($answer['period'])['description'],
                 // точная стоимость доставки
                 'rate' => $answer['tarif']
             ]
@@ -87,7 +100,17 @@ class gppunktsShipping extends waShipping
      * Пользовательские поля
      *
      * @param waOrder $order
-     * @return mixed
+     * @return array
+     * [
+     *  'shipping_param' => [
+     *      // значение по умолчанию
+     *      'value' => 'Значение поля по умолчанию'
+     *      // Название поля
+     *      'title' => 'Название поля'
+     *      // идентификатор элемента управления
+     *      'control_type' => 'MySetPrice'
+     *  ]
+     * ]
      */
     public function customFields(waOrder $order)
     {
@@ -263,7 +286,7 @@ EOD;
      * @param $dayNumber
      * @return string
      */
-    private function SetDaysEnd($dayNumber)
+    private function setDaysEnd($dayNumber)
     {
         return ($dayNumber >= 5
             ? "дней"
@@ -277,12 +300,12 @@ EOD;
      * @param $period
      * @return array
      */
-    private function GetIntervalFromPeriod($period)
+    private function getIntervalFromPeriod($period)
     {
         preg_match_all('/\d+/', $period, $match);
         if (count($match[0]) == 1) {
             $min_days = $match[0][0];
-            $description = "$min_days " . $this->SetDaysEnd($min_days);
+            $description = "$min_days " . $this->setDaysEnd($min_days);
         } elseif (count($match[0]) > 1) {
             $min_days = $match[0][0];
             $max_days = $match[0][1];
