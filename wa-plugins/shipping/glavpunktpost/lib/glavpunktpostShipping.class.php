@@ -5,10 +5,10 @@
  *
  * Отвечает за расчёт цены
  *
- * Class gppostShipping
+ * Class glavpunktpointsShipping
  * @author SergeChepikov
  */
-class gppostShipping extends waShipping
+class glavpunktpostShipping extends waShipping
 {
     /**
      * Расчёт стоимости доставки и вывод её
@@ -25,22 +25,22 @@ class gppostShipping extends waShipping
         $zip = trim($this->getAddress('zip'));
         // Проверяем, заполнено ли поля адреса и индекса
         if (($city === '' || $street === '') && $zip === '') {
-            return [
-                [
+            return array(
+                array(
                     'rate' => null,
                     'comment' => 'Введите адрес доставки или индекс',
-                ]
-            ];
+                )
+            );
         }
 
         // Проверяем вес заказа
         if ($this->getTotalWeight() > 20) {
-            return [
-                [
+            return array(
+                array(
                     'rate' => null,
                     'comment' => 'Данная доставка недоступна для заказов весом более 20 кг',
-                ]
-            ];
+                )
+            );
         }
 
         // Проверяем параметр "Город отправки"
@@ -54,6 +54,7 @@ class gppostShipping extends waShipping
         $url = 'https://glavpunkt.ru/api/get_pochta_tarif' .
             '?address=' . $address .
             '&cityFrom =' . ($cityFrom !== 'Москва' ? "MSK" : "SPB") .
+            '&cms=shopscript' .
             '&weight=' . $this->getTotalWeight() .
             '&price=' . $this->getTotalPrice();
 
@@ -64,24 +65,24 @@ class gppostShipping extends waShipping
 
         // Проверка на ошибку при запросе
         if ($answer['result'] === 'error') {
-            return [
-                [
+            return array(
+                array(
                     'rate' => null,
                     'comment' => $answer['message'],
-                ]
-            ];
+                )
+            );
         }
 
-        return [
-            'gpPost' => [
+        return array(
+            'gpPost' => array(
                 //название варианта доставки
                 'name' => 'Почта РФ Главпункт',
                 //ISO3-код валюты, в которой рассчитана  стоимость  доставки
                 'currency' => $this->currency,
                 //точная стоимость доставки
                 'rate' => $answer['tarifTotal'],
-            ]
-        ];
+            )
+        );
     }
 
     /**
@@ -109,11 +110,11 @@ class gppostShipping extends waShipping
      */
     public function requestedAddressFields()
     {
-        return [
-            'zip' => [],
-            'city' => [],
-            'street' => [],
-        ];
+        return array(
+            'zip' => array(),
+            'city' => array(),
+            'street' => array(),
+        );
     }
 
     /**
@@ -151,10 +152,10 @@ class gppostShipping extends waShipping
     private function request($url)
     {
         $curl = curl_init();
-        curl_setopt_array($curl, [
+        curl_setopt_array($curl, array(
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_URL => $url
-        ]);
+        ));
         $answer = json_decode(curl_exec($curl), true);
         curl_close($curl);
 
