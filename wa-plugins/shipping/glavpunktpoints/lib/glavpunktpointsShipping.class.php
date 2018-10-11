@@ -5,10 +5,10 @@
  *
  * Отвечает за расчёт цены
  *
- * Class gppunktsShipping
+ * Class glavpunktpointsShipping
  * @author SergeChepikov
  */
-class gppunktsShipping extends waShipping
+class glavpunktpointsShipping extends waShipping
 {
     /**
      * Расчёт стоимости доставки и вывод её
@@ -26,7 +26,7 @@ class gppunktsShipping extends waShipping
      *      // точная стоимость доставки
      *      'rate' => $answer['tarif']
      *  ]
-     *]
+     * ]
      */
     protected function calculate()
     {
@@ -39,22 +39,22 @@ class gppunktsShipping extends waShipping
         $text = $storage->get($keyText);
 
         if (trim($punktId) === '') {
-            return [
-                [
+            return array(
+                array(
                     'rate' => null,
                     'comment' => 'Выберите пункт выдачи'
-                ]
-            ];
+                )
+            );
         }
 
         // Проверяем вес заказа
         if ($this->getTotalWeight() > 20) {
-            return [
-                [
+            return array(
+                array(
                     'rate' => null,
-                    'comment' => 'Данная доставка недоступна для заказов весом более 20 кг',
-                ]
-            ];
+                    'comment' => 'Данная доставка недоступна для заказов весом более 20 кг'
+                )
+            );
         }
 
         // Проверяем параметр "Город отправки"
@@ -65,6 +65,7 @@ class gppunktsShipping extends waShipping
         // Формируем URL запроса в ГП для получение тарифа
         $url = 'https://glavpunkt.ru/api/get_tarif' .
             '?serv=' . 'выдача' .
+            '&cms=shopscript' .
             '&cityFrom=' . $cityFrom .
             '&cityTo=' . $cityTo .
             '&punktId=' . $punktId .
@@ -76,24 +77,25 @@ class gppunktsShipping extends waShipping
 
         // Проверка на ошибку при запросе
         if ($answer['result'] === 'error') {
-            return [
-                [
+            return array(
+                array(
                     'rate' => null,
-                    'comment' => $answer['message'] . $url . "*",
-                ]
-            ];
+                    'comment' => $answer['message']
+                )
+            );
         }
+        $interval = $this->getIntervalFromPeriod($answer['period']);
 
-        return [
-            'punkts' => [
+        return array(
+            'punkts' => array(
                 'name' => $text,
                 'currency' => $this->currency,
                 // произвольная строка, содержащая  информацию о примерном времени доставки
-                'est_delivery' => $this->getIntervalFromPeriod($answer['period'])['description'],
+                'est_delivery' => $interval['description'],
                 // точная стоимость доставки
                 'rate' => $answer['tarif']
-            ]
-        ];
+            )
+        );
     }
 
     /**
@@ -116,17 +118,17 @@ class gppunktsShipping extends waShipping
     {
         $fields = parent::customFields($order);
         $this->registerControl('MySetPrice', array($this, 'mySetPrice'));
-        $fields['choosePunkt'] = [
+        $fields['choosePunkt'] = array(
             'value' => "",
             'title' => 'Пункт выдачи: ',
             'control_type' => 'MySetPrice'
-        ];
+        );
 
-        $fields['selectedPunkt'] = [
+        $fields['selectedPunkt'] = array(
             'value' => '',
             'title' => 'Выбранный пункт выдачи',
             'control_type' => waHtmlControl::HIDDEN
-        ];
+        );
 
         return $fields;
     }
@@ -140,12 +142,12 @@ class gppunktsShipping extends waShipping
         $keyCity = $this->getCacheKey('city');
         $keyText = $this->getCacheKey('text');
         $storage = wa()->getStorage();
-        $storage->set($keyPunktId, $_POST['punktId']);
-        $storage->set($keyCity, $_POST['city']);
-        $storage->set($keyText, $_POST['text']);
-        echo json_encode([
+        $storage->set($keyPunktId, waRequest::post('punktId'));
+        $storage->set($keyCity, waRequest::post('city'));
+        $storage->set($keyText, waRequest::post('text'));
+        echo json_encode(array(
             'status' => 'ok'
-        ]);
+        ));
     }
 
     /**
@@ -270,10 +272,10 @@ EOD;
     private function request($url)
     {
         $curl = curl_init();
-        curl_setopt_array($curl, [
+        curl_setopt_array($curl, array(
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_URL => $url
-        ]);
+        ));
         $answer = json_decode(curl_exec($curl), true);
         curl_close($curl);
 
@@ -312,10 +314,10 @@ EOD;
             $description = "от $min_days до $max_days дней";
         }
 
-        return [
+        return array(
             'description' => $description,
             'minDays' => $min_days
-        ];
+        );
     }
 
     /**

@@ -3,12 +3,12 @@
 /**
  * Класс модуля доставки
  *
- * Отвечает за расчёт цены, вывод дополнительных полей
+ * Отвечает за расчёт цены
  *
- * Class glavpunktShipping
+ * Class glavpunktpointsShipping
  * @author SergeChepikov
  */
-class glavpunktShipping extends waShipping
+class glavpunktcourierShipping extends waShipping
 {
     /** @var int количество дней, через которое можно выбирать дату доставки */
     private $days = 1;
@@ -22,22 +22,22 @@ class glavpunktShipping extends waShipping
     {
         // Проверяем, заполнено ли поле "Город"
         if (trim($this->getAddress('city')) === '') {
-            return [
-                [
+            return array(
+                array(
                     'rate' => null,
                     'comment' => 'Введите город доставки',
-                ]
-            ];
+                )
+            );
         }
 
         // Проверяем вес заказа
         if ($this->getTotalWeight() > 20) {
-            return [
-                [
+            return array(
+                array(
                     'rate' => null,
                     'comment' => 'Данная доставка недоступна для заказов весом более 20 кг',
-                ]
-            ];
+                )
+            );
         }
 
         // Проверяем параметр "Город отправки"
@@ -48,6 +48,7 @@ class glavpunktShipping extends waShipping
         // Формируем URL запроса в ГП для получение тарифа
         $url = 'https://glavpunkt.ru/api/get_tarif' .
             '?serv=' . 'курьерская доставка' .
+            '&cms=shopscript' .
             '&cityFrom=' . $cityFrom .
             '&cityTo=' . $this->getAddress('city') .
             '&weight=' . $this->getTotalWeight() .
@@ -58,30 +59,30 @@ class glavpunktShipping extends waShipping
 
         // Проверка на ошибку при запросе
         if ($answer['result'] === 'error') {
-            return [
-                [
+            return array(
+                array(
                     'rate' => null,
                     'comment' => $answer['message'],
-                ]
-            ];
+                )
+            );
         }
 
         // Установка количества дней, через которое можно выбирать дату доставки,
         // в зависимости от минимального периода доставки
-        $this->days = $this->GetIntervalFromPeriod($answer['period'])['minDays'];
+        $this->days = ($this->GetIntervalFromPeriod($answer['period']))['minDays'];
 
-        return [
-            'gpCoutier' => [
+        return array(
+            'gpCoutier' => array(
                 //название варианта доставки
                 'name' => 'Курьерская доставка',
                 //произвольная строка, содержащая  информацию о примерном времени доставки
-                'est_delivery' => $this->GetIntervalFromPeriod($answer['period'])['description'],
+                'est_delivery' => ($this->GetIntervalFromPeriod($answer['period']))['description'],
                 //ISO3-код валюты, в которой рассчитана  стоимость  доставки
                 'currency' => $this->currency,
                 //точная стоимость доставки
                 'rate' => $answer['tarif'],
-            ]
-        ];
+            )
+        );
     }
 
     /**
@@ -135,9 +136,10 @@ class glavpunktShipping extends waShipping
      */
     public function requestedAddressFields()
     {
-        return [
-            'city' => ['cost' => true]
-        ];
+        return array(
+            'city' => array('cost' => true),
+            'street'  => array('cost' => true),
+        );
     }
 
     /**
@@ -153,61 +155,61 @@ class glavpunktShipping extends waShipping
         $this->registerControl('CustomDeliveryIntervalControl');
 
         // Доступные интервалы доставки
-        $setting = [
+        $setting = array(
             'interval' => true,
             'date' => true,
-            'intervals' => [
-                [
+            'intervals' => array(
+                array(
                     'from' => 10,
                     'from_m' => 00,
                     'to' => 18,
                     'to_m' => 00,
-                    'day' => [1, 1, 1, 1, 1, 1],
-                ],
-                [
+                    'day' => array(1, 1, 1, 1, 1, 1),
+                ),
+                array(
                     'from' => 10,
                     'from_m' => 00,
                     'to' => 14,
                     'to_m' => 00,
-                    'day' => [1, 1, 1, 1, 1],
-                ],
-                [
+                    'day' => array(1, 1, 1, 1, 1),
+                ),
+                array(
                     'from' => 11,
                     'from_m' => 00,
                     'to' => 14,
                     'to_m' => 00,
-                    'day' => [1, 1, 1, 1, 1],
-                ],
-                [
+                    'day' => array(1, 1, 1, 1, 1),
+                ),
+                array(
                     'from' => 12,
                     'from_m' => 00,
                     'to' => 15,
                     'to_m' => 00,
-                    'day' => [1, 1, 1, 1, 1],
-                ],
-                [
+                    'day' => array(1, 1, 1, 1, 1),
+                ),
+                array(
                     'from' => 13,
                     'from_m' => 00,
                     'to' => 16,
                     'to_m' => 00,
-                    'day' => [1, 1, 1, 1, 1],
-                ],
-                [
+                    'day' => array(1, 1, 1, 1, 1),
+                ),
+                array(
                     'from' => 14,
                     'from_m' => 00,
                     'to' => 17,
                     'to_m' => 00,
-                    'day' => [1, 1, 1, 1, 1],
-                ],
-                [
+                    'day' => array(1, 1, 1, 1, 1),
+                ),
+                array(
                     'from' => 15,
                     'from_m' => 00,
                     'to' => 18,
                     'to_m' => 00,
-                    'day' => [1, 1, 1, 1, 1],
-                ],
-            ]
-        ];
+                    'day' => array(1, 1, 1, 1, 1),
+                ),
+            )
+        );
 
         if (!strlen($this->delivery_time)) {
             $from = time();
@@ -228,16 +230,16 @@ class glavpunktShipping extends waShipping
             $value['date'] = $shipping_params['desired_delivery.date'];
         }
 
-        $fields['desired_delivery'] = [
+        $fields['desired_delivery'] = array(
             'value' => $value,
             'title' => 'Желаемое время доставки',
             'control_type' => 'CustomDeliveryIntervalControl',
-            'params' => [
+            'params' => array(
                 'date' => empty($setting['date']) ? null : ifempty($offset, 0),
                 'interval' => ifset($setting['interval']),
                 'intervals' => ifset($setting['intervals']),
-            ],
-        ];
+            ),
+        );
 
         return $fields;
     }
@@ -251,10 +253,10 @@ class glavpunktShipping extends waShipping
     private function request($url)
     {
         $curl = curl_init();
-        curl_setopt_array($curl, [
+        curl_setopt_array($curl, array(
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_URL => $url
-        ]);
+        ));
         $answer = json_decode(curl_exec($curl), true);
         curl_close($curl);
 
@@ -294,11 +296,9 @@ class glavpunktShipping extends waShipping
             $description = "от $min_days до $max_days дней";
         }
 
-        return [
+        return array(
             'description' => $description,
             'minDays' => $min_days
-        ];
+        );
     }
-
-
 }

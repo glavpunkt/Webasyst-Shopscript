@@ -7,6 +7,6 @@
 
 # Allow
 !.gitignore
-!/wa-plugins/shipping/glavpunkt/**
-!/wa-plugins/shipping/gppost/**
-!/wa-plugins/shipping/gppunkts/**
+!/wa-plugins/shipping/glavpunktcourier/**
+!/wa-plugins/shipping/glavpunktpost/**
+!/wa-plugins/shipping/glavpunktpoints/**
