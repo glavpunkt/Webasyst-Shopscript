@@ -199,7 +199,7 @@ class glavpunktpointsShipping extends waShipping
         $('.currentPunkt').html(text);
     }
     // Функция срабатывающее на событие: выбор пункта выдачи на карте
-    function selectPunkt(punktInfo) {  
+    function selectPunkt(punktInfo) {
         var serviceDOM = $('.shipping-{$appKey}');
         serviceDOM.find('.price').html('<i class="icon16 loading"></i>');  
         var text = 'Пункт выдачи ' + punktInfo.brand + '<br>' +
@@ -217,7 +217,7 @@ class glavpunktpointsShipping extends waShipping
                 // обращаемся за расчётом цены доставки
                 $.ajax({
                     "type": 'POST',
-                    "url": '/shop/data/shipping/',
+                    "url": window.location.pathname.replace("/checkout/", "")+'/data/shipping/',
                     "data": {
                         "shipping_id": $appKey,
                         "shipping_{$appKey}[selectedPunktId]": punktInfo.id,
