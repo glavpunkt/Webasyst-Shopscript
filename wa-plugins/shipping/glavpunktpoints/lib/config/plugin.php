@@ -1,9 +1,13 @@
 <?php
 return array(
-    'name'        => 'Пункты выдачи Главпункт',
-    'description' => 'Расчёт стоимости доставки до пунктов выдачи Главпункт.',
-    'icon'        => 'img/logo16.png', //path to module 16x16 icon
-    'logo'        => 'img/logo.png', //path to module logo (recommended logo size: 60x32)
-    'version'     => '1.0.0',
-    'vendor'      => '1116972',
+    'name' => 'Glavpunkt shipp',
+    'description' => 'Доставка Главпункт',
+    'icon' => 'img/logo16.png',
+    'logo' => 'img/logo.png',
+    'vendor' => '1116972',
+    'version' => '0.0.1',
+    'external' => true, //необязательный параметр
+    'external_tracking' => true, //необязательный параметр
+    'services_by_type' => true, //необязательный параметр
+    'custom_settings' => true,
 );
