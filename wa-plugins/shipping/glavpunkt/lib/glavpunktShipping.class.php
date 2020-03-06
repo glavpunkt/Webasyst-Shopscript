@@ -22,9 +22,34 @@ class glavpunktShipping extends waShipping
         $cost = 15;
         $deliveres = [];
         $region_id = $this->getAddress('city');
+        $activDeliveres = $this->optionsDelivery;
         if ($region_id) {
-            $deliveres = [
-                'variant_1' => array(
+            if (isset($activDeliveres[1])){
+                $deliveres += [
+                    'variant_1' => array(
+                        'name' => 'Пункт Самовывоза', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                        'comment' => 'описание необязательно', //необязательное описание варианта доставки
+                        'est_delivery' => 'примерное время доставки', //произвольная строка, содержащая  информацию о примерном времени доставки
+                        'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
+                        'rate' => $cost, //$this->cost, //точная стоимость доставки
+                        'type' => self::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
+                        'delivery_date' => date("Y-m-d H:i:s"), //дата доставки или интервал дат доставки в формате SQL DATETIME
+                        'service' => 'сервис', //название службы доставки для указания компании, выполняющей фактическую доставку
+                        'custom_data'   => [
+                            waShipping::TYPE_PICKUP => [
+                                'id'          => 'id',//$code,
+                                'name'        => 'name',
+                                'lat'         => 59.941535, //$point['lat'],
+                                'lng'         => 31.257957, //$point['lng'],,
+                                'schedule'    => 'shedule',//$info_by_point['schedule'],
+                                'description' => 'description', //$point['address'],
+                            ]
+                        ],
+                    ),
+                ];
+            };
+            $deliveres += [
+                'variant_12' => array(
                     'name' => 'Пункт Самовывоза', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                     'comment' => 'описание необязательно', //необязательное описание варианта доставки
                     'est_delivery' => 'примерное время доставки', //произвольная строка, содержащая  информацию о примерном времени доставки
@@ -33,8 +58,46 @@ class glavpunktShipping extends waShipping
                     'type' => self::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                     'delivery_date' => date("Y-m-d H:i:s"), //дата доставки или интервал дат доставки в формате SQL DATETIME
                     'service' => 'сервис', //название службы доставки для указания компании, выполняющей фактическую доставку
+                    'custom_data'   => [
+                        waShipping::TYPE_PICKUP => [
+                            'id'          => 'id',//$code,
+                            'name'        => 'name',
+                            'lat'         => 59.941535, //$point['lat'],
+                            'lng'         => 30.257957, //$point['lng'],,
+                            'schedule'    => 'shedule',//$info_by_point['schedule'],
+                            'description' => 'description', //$point['address'],
+                        ]
+                    ],
                 ),
             ];
+            if (isset($activDeliveres[2])){
+                $deliveres += [
+                    'variant_2' => array(
+                        'name' => 'Почта', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                        'comment' => 'описание необязательно', //необязательное описание варианта доставки
+                        'est_delivery' => 'примерное время доставки', //произвольная строка, содержащая  информацию о примерном времени доставки
+                        'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
+                        'rate' => $cost, //$this->cost, //точная стоимость доставки
+                        'type' => self::TYPE_POST, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
+                        'delivery_date' => date("Y-m-d H:i:s"), //дата доставки или интервал дат доставки в формате SQL DATETIME
+                        'service' => 'сервис', //название службы доставки для указания компании, выполняющей фактическую доставку
+                    ),
+                ];
+            };
+            if (isset($activDeliveres[3])){
+                $deliveres += [
+                    'variant_3' => array(
+                        'name' => 'Курьер', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                        'comment' => 'описание необязательно', //необязательное описание варианта доставки
+                        'est_delivery' => 'примерное время доставки', //произвольная строка, содержащая  информацию о примерном времени доставки
+                        'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
+                        'rate' => $cost, //$this->cost, //точная стоимость доставки
+                        'type' => self::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
+                        'delivery_date' => date("Y-m-d H:i:s"), //дата доставки или интервал дат доставки в формате SQL DATETIME
+                        'service' => 'сервис', //название службы доставки для указания компании, выполняющей фактическую доставку
+                    ),
+                ];
+            };
         } else {
 
             $deliveres = [
@@ -77,21 +140,21 @@ class glavpunktShipping extends waShipping
         return $this->weight_dimension;
     }
 
-    public function customFields(waOrder $order)
-    {
-        $this->registerControl('Maplink', array($this, 'openMap'));
-
-        return array(
-            'field_1' => array(
-                'value' => null,
-                'title' => '',
-                'control_type' => 'Maplink',
-                'data' => array(
-                    'affects-rate' => true,
-                ),
-            ),
-        );
-    }
+//    public function customFields(waOrder $order)
+//    {
+//        $this->registerControl('Maplink', array($this, 'openMap'));
+//
+//        return array(
+//            'field_1' => array(
+//                'value' => null,
+//                'title' => '',
+//                'control_type' => 'Maplink',
+//                'data' => array(
+//                    'affects-rate' => true,
+//                ),
+//            ),
+//        );
+//    }
 
     public function openMap($name, $params = array())
     {
