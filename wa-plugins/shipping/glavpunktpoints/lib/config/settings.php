@@ -16,5 +16,14 @@ return array(
                 'title' => 'Москва',),
         ),
         'value' => 'Санкт-Петербург',
+    ),
+    'optionsDelivery' => array(
+        'title' => 'Выберите необходимые способы доставки',
+        'control_type' => waHtmlControl::GROUPBOX,
+        'options' => array(
+            1 => 'Пункты самовывоза',
+            2 => 'Доставка Почтой РФ',
+            3 => 'Курьерская доставка',
+        ),
     )
 );
