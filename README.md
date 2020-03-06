@@ -1,1 +1,1 @@
-# Webasyst-Shopscript
+# Webasyst-Shopscript v2
