@@ -153,25 +153,18 @@ class glavpunktShipping extends waShipping
 
 
         $data1 = [
-             ['serv' => "выдача",
+             'serv' => "выдача",
              'cityFrom' => "Санкт-Петербург",
              'cityTo' => "Москва",
              'weight' => 1,
-             'price' => 5000
-            ],
-            [
-             'serv' => "выдача по РФ",
-             'cityFrom' => "Санкт-Петербург",
-             'cityTo' => "Новосибирск",
-             'weight' => 2,
-             'price' => 3000
-            ]
+             'price' => 5000,
+             'paymentType' => "cash"
         ];
 
-        $data = json_encode($data1, true);
+        $data = json_encode($data1);
 
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://glavpunkt.ru/api/get_tarifs');
+        $curl = curl_init('https://glavpunkt.ru/api-1.1/get_tarifs');
+        //curl_setopt($curl, CURLOPT_URL, 'https://glavpunkt.ru/api-1.1/get_tarifs');
         curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
         curl_setopt($curl, CURLOPT_POST, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
