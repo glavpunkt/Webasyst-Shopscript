@@ -21,58 +21,53 @@ class glavpunktShipping extends waShipping
 
         $cost = 15;
         $deliveres = [];
-        $region_id = $this->getAddress('city');
+        $city = $this->getAddress('city');
+        //$region = $this->getAddress('region');
         $activDeliveres = $this->optionsDelivery;
-        if ($region_id) {
-            if (isset($activDeliveres[1])){
-                $deliveres += [
-                    'variant_1' => array(
-                        'name' => 'Пункт Самовывоза', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                        'comment' => 'описание необязательно', //необязательное описание варианта доставки
-                        'est_delivery' => 'примерное время доставки', //произвольная строка, содержащая  информацию о примерном времени доставки
-                        'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                        'rate' => $cost, //$this->cost, //точная стоимость доставки
-                        'type' => self::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                        'delivery_date' => date("Y-m-d H:i:s"), //дата доставки или интервал дат доставки в формате SQL DATETIME
-                        'service' => 'сервис', //название службы доставки для указания компании, выполняющей фактическую доставку
-                        'custom_data'   => [
-                            waShipping::TYPE_PICKUP => [
-                                'id'          => 'id',//$code,
-                                'name'        => 'name',
-                                'lat'         => 59.941535, //$point['lat'],
-                                'lng'         => 31.257957, //$point['lng'],,
-                                'schedule'    => 'shedule',//$info_by_point['schedule'],
-                                'description' => 'description', //$point['address'],
-                            ]
+        $punktsInSelectedCity = $this->getPunkts($city);
+
+        var_dump($this->getTarif());
+
+        if (isset($city)) {
+            if (isset($activDeliveres[1])) {
+                    $i = 0;
+                foreach ($punktsInSelectedCity as $k => $v) {
+
+                    $additional = isset($v["email"]) ? 'Email: ' . $v["email"] . '; ' : '';
+                    $additional .= isset($v["phone"]) ? 'Телефон: ' . $v["phone"] . '; ' : '';
+                    $additional .= isset($v["work_time"]) ? 'Режим работы: ' . $v["work_time"] . '; ' : '';
+
+                    $deliveres += [
+                        'variant_' . $i => [
+                            'name' => $v["address"], //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                            'comment' => 'описание необязательно', //необязательное описание варианта доставки
+                            'est_delivery' => $v["delivery_period"], //произвольная строка, содержащая  информацию о примерном времени доставки
+                            'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
+                            'rate' => $cost, //$this->cost, //точная стоимость доставки
+                            'type' => self::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
+                            //'delivery_date' => $v["delivery_period"], //дата доставки или интервал дат доставки в формате SQL DATETIME
+                            'service' => $v["operator"] != "gp" ? $v['operator'] : 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
+                            'custom_data' => [
+                                waShipping::TYPE_PICKUP => [
+                                    'id' => $v['id'],
+                                    'lat' => $v["geo_lat"],
+                                    'lng' => $v["geo_lng"],
+                                    'additional' => $additional,
+                                    'payment' => [
+                                        waShipping::PAYMENT_TYPE_CARD    => isset($v["card_accepted"]) ? true : false,
+                                        waShipping::PAYMENT_TYPE_CASH    => true,
+                                    ],
+                                ],
+                            ],
                         ],
-                    ),
-                ];
+                    ];
+                    $i++;
+                }
             };
-            $deliveres += [
-                'variant_12' => array(
-                    'name' => 'Пункт Самовывоза', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                    'comment' => 'описание необязательно', //необязательное описание варианта доставки
-                    'est_delivery' => 'примерное время доставки', //произвольная строка, содержащая  информацию о примерном времени доставки
-                    'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                    'rate' => $cost, //$this->cost, //точная стоимость доставки
-                    'type' => self::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                    'delivery_date' => date("Y-m-d H:i:s"), //дата доставки или интервал дат доставки в формате SQL DATETIME
-                    'service' => 'сервис', //название службы доставки для указания компании, выполняющей фактическую доставку
-                    'custom_data'   => [
-                        waShipping::TYPE_PICKUP => [
-                            'id'          => 'id',//$code,
-                            'name'        => 'name',
-                            'lat'         => 59.941535, //$point['lat'],
-                            'lng'         => 30.257957, //$point['lng'],,
-                            'schedule'    => 'shedule',//$info_by_point['schedule'],
-                            'description' => 'description', //$point['address'],
-                        ]
-                    ],
-                ),
-            ];
+
             if (isset($activDeliveres[2])){
                 $deliveres += [
-                    'variant_2' => array(
+                    'variant_post' => array(
                         'name' => 'Почта', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                         'comment' => 'описание необязательно', //необязательное описание варианта доставки
                         'est_delivery' => 'примерное время доставки', //произвольная строка, содержащая  информацию о примерном времени доставки
@@ -84,9 +79,10 @@ class glavpunktShipping extends waShipping
                     ),
                 ];
             };
+
             if (isset($activDeliveres[3])){
                 $deliveres += [
-                    'variant_3' => array(
+                    'variant_todoor' => array(
                         'name' => 'Курьер', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                         'comment' => 'описание необязательно', //необязательное описание варианта доставки
                         'est_delivery' => 'примерное время доставки', //произвольная строка, содержащая  информацию о примерном времени доставки
@@ -108,8 +104,6 @@ class glavpunktShipping extends waShipping
             ];
 
         }
-
-
 
         return $deliveres;
     }
@@ -140,67 +134,56 @@ class glavpunktShipping extends waShipping
         return $this->weight_dimension;
     }
 
-//    public function customFields(waOrder $order)
-//    {
-//        $this->registerControl('Maplink', array($this, 'openMap'));
-//
-//        return array(
-//            'field_1' => array(
-//                'value' => null,
-//                'title' => '',
-//                'control_type' => 'Maplink',
-//                'data' => array(
-//                    'affects-rate' => true,
-//                ),
-//            ),
-//        );
-//    }
+    private function getPunkts($city){
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, 'https://glavpunkt.ru/api/pvz_list?cityFrom=' . $this->cityFrom . '&cityTo=' . $city);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
-    public function openMap($name, $params = array())
-    {
-//        echo "<pre>";
-//        var_dump( $this->key);
-//        echo "</pre>";
-        $url_params = array(
-            'action_id' => 'rateCOD',
-            'plugin_id' => $this->key,
-        );
-        $url = wa()->getRouteUrl(sprintf('%s/frontend/shippingPlugin', $this->app_id), $url_params, true);
-        $totalPrice = wa()->getStorage()->getAll()["shop/cart"]['total'];
-        $dataForWidget = "{defaultCity: '" . wa()->getStorage()->getAll()["shop/checkout"]["order"]["region"]["city"] . "'}";
-        $html = <<<HTML
-        <script async="" src="//glavpunkt.ru/js/punkts-widget/glavpunkt.js" charset="UTF8"></script>
-        <a href="javascript:void(0)" class="openMap" onclick="glavpunkt.openMap(selectPunkt, $dataForWidget); return false;">Выбрать пункт выдачи на карте</a>
-        <p class="glavpunkt-point"></p>
-        <p class="glavpunkt-cost"></p>
-        <script type="text/javascript">
-        
-                function selectPunkt(punktInfo) {
-                                console.log(punktInfo);
-                                $.getJSON( "//glavpunkt.ru/api/get_tarif", {
-                                    'serv': 'выдача',
-                                    'cityFrom': '$this->cityFrom',
-                                    'cityTo': punktInfo.city,
-                                    'punktId': punktInfo.id,
-                                    'weight': 1,
-                                    'price':'$totalPrice',
-                                    'paymentType':'cash'
-                                }).done(function(data) {
-                                    console.log(data.tarif);
-                                    
-                                });
-    
-                                
-                                $('.glavpunkt-point').html('Название/метро: ' + punktInfo.name + '<br>' +
-                                 'Адрес: ' + punktInfo.address + '<br>' +
-                                 'Email: ' + punktInfo.email + '<br>' +
-                                 'Телефон: ' + punktInfo.phone + '<br>' + 
-                                 'Часы работы: ' + punktInfo.work_time + '<br>'
-                                  + punktInfo.deliveryDays);
-                            }
-        </script>
-HTML;
-        return $html;
+        $out = curl_exec($curl);
+        curl_close($curl);
+        $res = json_decode($out, true);
+        if (is_null($res)) {
+            throw new Exception("Неверный JSON ответ: " . $out);
+        }
+
+        return $res;
+    }
+
+    private function getTarif(){
+
+
+        $data1 = [
+             ['serv' => "выдача",
+             'cityFrom' => "Санкт-Петербург",
+             'cityTo' => "Москва",
+             'weight' => 1,
+             'price' => 5000
+            ],
+            [
+             'serv' => "выдача по РФ",
+             'cityFrom' => "Санкт-Петербург",
+             'cityTo' => "Новосибирск",
+             'weight' => 2,
+             'price' => 3000
+            ]
+        ];
+
+        $data = json_encode($data1, true);
+
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, 'https://glavpunkt.ru/api/get_tarifs');
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
+        curl_setopt($curl, CURLOPT_POST, true);
+        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
+
+        $out = curl_exec($curl);
+        curl_close($curl);
+        $res = json_decode($out, true);
+        if (is_null($res)) {
+            throw new Exception("Неверный JSON ответ: " . $out);
+        }
+
+        return $res;
     }
 
 }
