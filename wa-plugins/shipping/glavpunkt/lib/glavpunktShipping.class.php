@@ -153,12 +153,24 @@ class glavpunktShipping extends waShipping
 
 
         $data1 = [
-             'serv' => "выдача",
-             'cityFrom' => "Санкт-Петербург",
-             'cityTo' => "Москва",
-             'weight' => 1,
-             'price' => 5000,
-             'paymentType' => "cash"
+            [
+                 'serv' => "выдача по РФ",
+                 'cityFrom' => "Санкт-Петербург",
+                 'cityTo' => "Москва",
+                 'weight' => 1,
+                 'price' => 5000,
+                 'punktId' => "Msk-DP-AkademikaYangelya-R3k1A",
+                 'paymentType' => "cash"
+            ],
+            [
+                'serv' => "выдача по РФ",
+                'cityFrom' => "Санкт-Петербург",
+                'cityTo' => "Москва",
+                'weight' => 1,
+                'price' => 5000,
+                'punktId' => "Msk-TD-Altufevo",
+                'paymentType' => "cash"
+            ],
         ];
 
         $data = json_encode($data1);
