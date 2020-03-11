@@ -4,10 +4,9 @@
  * Класс модуля доставки
  *
  * Отвечает за расчёт цены
- * @property-read $cod
  *
- * Class glavpunktpointsShipping
- * @author SergeChepikov
+ * Class glavpunkthipping
+ * @author SokolovMikhail
  */
 class glavpunktShipping extends waShipping
 {
@@ -18,20 +17,16 @@ class glavpunktShipping extends waShipping
      */
     protected function calculate()
     {
-
-        $cost = 15;
+        $cost = 15; // заглушка, убрать когда будут реализованны все доставки
         $deliveres = [];
-        $city = $this->getAddress('city');
-        //$region = $this->getAddress('region');
+        $cityTo = $this->getAddress('city');
         $activDeliveres = $this->optionsDelivery;
-        $punktsInSelectedCity = $this->getPunkts($city);
+        $tarifForPunktsInSelectedCity = $this->getPunktsWithTarif($cityTo, $this->cityFrom);
 
-        var_dump($this->getTarif());
-
-        if (isset($city)) {
+        if (isset($cityTo)) {
             if (isset($activDeliveres[1])) {
-                    $i = 0;
-                foreach ($punktsInSelectedCity as $k => $v) {
+                    $i = 0; //  счетчик, нужен для правильного формирования массива с пвз
+                foreach ($tarifForPunktsInSelectedCity as $k => $v) {
 
                     $additional = isset($v["email"]) ? 'Email: ' . $v["email"] . '; ' : '';
                     $additional .= isset($v["phone"]) ? 'Телефон: ' . $v["phone"] . '; ' : '';
@@ -43,9 +38,8 @@ class glavpunktShipping extends waShipping
                             'comment' => 'описание необязательно', //необязательное описание варианта доставки
                             'est_delivery' => $v["delivery_period"], //произвольная строка, содержащая  информацию о примерном времени доставки
                             'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                            'rate' => $cost, //$this->cost, //точная стоимость доставки
+                            'rate' => $v['tarif'], //точная стоимость доставки
                             'type' => self::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                            //'delivery_date' => $v["delivery_period"], //дата доставки или интервал дат доставки в формате SQL DATETIME
                             'service' => $v["operator"] != "gp" ? $v['operator'] : 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
                             'custom_data' => [
                                 waShipping::TYPE_PICKUP => [
@@ -72,7 +66,7 @@ class glavpunktShipping extends waShipping
                         'comment' => 'описание необязательно', //необязательное описание варианта доставки
                         'est_delivery' => 'примерное время доставки', //произвольная строка, содержащая  информацию о примерном времени доставки
                         'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                        'rate' => $cost, //$this->cost, //точная стоимость доставки
+                        'rate' => $cost, //точная стоимость доставки
                         'type' => self::TYPE_POST, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                         'delivery_date' => date("Y-m-d H:i:s"), //дата доставки или интервал дат доставки в формате SQL DATETIME
                         'service' => 'сервис', //название службы доставки для указания компании, выполняющей фактическую доставку
@@ -87,7 +81,7 @@ class glavpunktShipping extends waShipping
                         'comment' => 'описание необязательно', //необязательное описание варианта доставки
                         'est_delivery' => 'примерное время доставки', //произвольная строка, содержащая  информацию о примерном времени доставки
                         'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                        'rate' => $cost, //$this->cost, //точная стоимость доставки
+                        'rate' => $cost, //точная стоимость доставки
                         'type' => self::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                         'delivery_date' => date("Y-m-d H:i:s"), //дата доставки или интервал дат доставки в формате SQL DATETIME
                         'service' => 'сервис', //название службы доставки для указания компании, выполняющей фактическую доставку
@@ -95,7 +89,7 @@ class glavpunktShipping extends waShipping
                 ];
             };
         } else {
-
+            // обязательное сообщение ошибки для пользователя
             $deliveres = [
                 array(
                     'rate'    => null,
@@ -134,9 +128,16 @@ class glavpunktShipping extends waShipping
         return $this->weight_dimension;
     }
 
-    private function getPunkts($city){
+    /**
+     * Возвращает массив со всеми пвз в городе доставки без цены
+     *
+     * @param string $cityTo город куда доставка
+     * @return array
+     * @throws Exception
+     */
+    private function getPunkts($cityTo){
         $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://glavpunkt.ru/api/pvz_list?cityFrom=' . $this->cityFrom . '&cityTo=' . $city);
+        curl_setopt($curl, CURLOPT_URL, 'https://glavpunkt.ru/api/pvz_list?cityFrom=' . $this->cityFrom . '&cityTo=' . $cityTo);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
         $out = curl_exec($curl);
@@ -149,34 +150,41 @@ class glavpunktShipping extends waShipping
         return $res;
     }
 
-    private function getTarif(){
+    /**
+     * Возвращает массив со всеми пвз в городе доставки и ценой
+     *
+     * @param string $cityTo город куда доставка
+     * @param string $cityFrom город отправки из настроек
+     * @return array
+     * @throws Exception
+     */
+    private function getPunktsWithTarif($cityTo, $cityFrom){
+
+        $punkts = $this->getPunkts($cityTo);
+        $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
+        $price = $this->getTotalPrice();
+        $punktsWithTarif = [];
+        $i = 0;
+        foreach ($punkts as $k => $v){
+            $punktsWithTarif += [
+                $i => [
+                        'serv' => "выдача по РФ",
+                        'cityFrom' => $cityFrom,
+                        'cityTo' => $cityTo,
+                        'weight' => $weight,
+                        'price' => $price,
+                        'punktId' => $v['id'],
+                        'paymentType' => "cash"
+                    ],
+                ];
+            $i++;
 
 
-        $data1 = [
-            [
-                 'serv' => "выдача по РФ",
-                 'cityFrom' => "Санкт-Петербург",
-                 'cityTo' => "Москва",
-                 'weight' => 1,
-                 'price' => 5000,
-                 'punktId' => "Msk-DP-AkademikaYangelya-R3k1A",
-                 'paymentType' => "cash"
-            ],
-            [
-                'serv' => "выдача по РФ",
-                'cityFrom' => "Санкт-Петербург",
-                'cityTo' => "Москва",
-                'weight' => 1,
-                'price' => 5000,
-                'punktId' => "Msk-TD-Altufevo",
-                'paymentType' => "cash"
-            ],
-        ];
+        }
 
-        $data = json_encode($data1);
+        $data = json_encode($punktsWithTarif);
 
         $curl = curl_init('https://glavpunkt.ru/api-1.1/get_tarifs');
-        //curl_setopt($curl, CURLOPT_URL, 'https://glavpunkt.ru/api-1.1/get_tarifs');
         curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
         curl_setopt($curl, CURLOPT_POST, true);
         curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
@@ -188,7 +196,15 @@ class glavpunktShipping extends waShipping
             throw new Exception("Неверный JSON ответ: " . $out);
         }
 
-        return $res;
+        foreach ($res as $kTarif => $vTarif){
+            foreach ($punkts as $k => $v){
+                if ($kTarif == $k){
+                    $punkts[$k] += ['tarif' => $vTarif['tarif']];
+                }
+            }
+        }
+
+        return $punkts;
     }
 
 }
