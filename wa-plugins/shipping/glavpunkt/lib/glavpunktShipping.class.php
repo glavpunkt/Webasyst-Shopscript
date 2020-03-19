@@ -5,7 +5,7 @@
  *
  * Отвечает за расчёт цены
  *
- * Class glavpunkthipping
+ * Class glavpunktShipping
  * @author SokolovMikhail
  */
 class glavpunktShipping extends waShipping
@@ -17,24 +17,24 @@ class glavpunktShipping extends waShipping
      */
     protected function calculate()
     {
+        $deliveries = array();
         $cityTo = $this->getAddress('city');
-        $activDeliveres = $this->optionsDelivery;
 
         if (isset($cityTo)){
-            if ($activDeliveres[1]){
-                $deliveres += $this->getArrayPickup($cityTo);
+            if (isset($this->optionsDelivery['pickup'])){
+                $deliveries = $this->getArrayPickup($cityTo);
             }
 
-            if ($activDeliveres[2]){
-                $deliveres += $this->getArrayPost($cityTo);
+            if (isset($this->optionsDelivery['post'])){
+                $deliveries['post'] = $this->getArrayPost($cityTo);
             }
 
-            if ($activDeliveres[3]){
-                $deliveres += $this->getArrayTodoor($cityTo);
+            if (isset($this->optionsDelivery['courier'])){
+                $deliveries['courier'] = $this->getArrayTodoor($cityTo);
             }
         } else {
             // обязательное сообщение ошибки для пользователя
-            $deliveres = [
+            $deliveries = [
                 array(
                     'rate'    => null,
                     'comment' => 'Для расчета стоимости доставки укажите регион доставки',
@@ -42,7 +42,7 @@ class glavpunktShipping extends waShipping
             ];
         }
 
-        return $deliveres;
+        return $deliveries;
     }
 
     /**
@@ -107,22 +107,16 @@ class glavpunktShipping extends waShipping
         $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
         $price = $this->getTotalPrice();
         $punktsWithTarif = array();
-        $i = 0; //счетчик что бы записывать данные в массив
         foreach ($punkts as $k => $v){
-            $punktsWithTarif += [
-                $i => [
-                        'serv' => "выдача по РФ",
-                        'cityFrom' => $cityFrom,
-                        'cityTo' => $cityTo,
-                        'weight' => $weight,
-                        'price' => $price,
-                        'punktId' => $v['id'],
-                        'paymentType' => "cash"
-                    ],
-                ];
-            $i++;
-
-
+            $punktsWithTarif[$v['id']] = array(
+                'serv' => "выдача по РФ",
+                'cityFrom' => $cityFrom,
+                'cityTo' => $cityTo,
+                'weight' => $weight,
+                'price' => $price,
+                'punktId' => $v['id'],
+                'paymentType' => "cash"
+            );
         }
 
         $data = json_encode($punktsWithTarif);
@@ -139,10 +133,10 @@ class glavpunktShipping extends waShipping
             throw new Exception("Неверный JSON ответ: " . $out);
         }
 
-        foreach ($res as $kTarif => $vTarif){
+        foreach ($res as $kTarif => $vTarif) {
             foreach ($punkts as $k => $v){
                 if ($kTarif == $k){
-                    $punkts[$k] += ['tarif' => $vTarif['tarif']];
+                    $punkts[$k] += array('tarif' => $vTarif['tarif']);
                 }
             }
         }
@@ -152,20 +146,19 @@ class glavpunktShipping extends waShipping
 
     private function getArrayPickup($cityTo)
     {
-        $deliveres = array();
-        $currency = $this->currency;
-
         $tarifForPunktsInSelectedCity = $this->getPunktsWithTarif($cityTo, $this->cityFrom);
 
-        $i = 0; //  счетчик, нужен для правильного формирования массива с пвз
         foreach ($tarifForPunktsInSelectedCity as $k => $v) {
+            $card = false;
+            if (isset($v["card_accepted"])){
+               $card = $v["card_accepted"];
+            }
 
             $additional = isset($v["email"]) ? 'Email: ' . $v["email"] . '; ' : '';
             $additional .= isset($v["phone"]) ? 'Телефон: ' . $v["phone"] . '; ' : '';
             $additional .= isset($v["work_time"]) ? 'Режим работы: ' . $v["work_time"] . '; ' : '';
 
-            $deliveres += [
-                'variant_' . $i => [
+            $deliveries[$v['id']] = array(
                     'name' => $v["address"], //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                     'comment' => 'описание необязательно', //необязательное описание варианта доставки
                     'est_delivery' => $v["delivery_period"], //произвольная строка, содержащая  информацию о примерном времени доставки
@@ -173,34 +166,48 @@ class glavpunktShipping extends waShipping
                     'rate' => $v['tarif'], //точная стоимость доставки
                     'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                     'service' => $v["operator"] != "gp" ? $v['operator'] : 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
-                    'custom_data' => [
-                        'pickup' => [
+                    'custom_data' => array(
+                        'pickup' => array(
                             'id' => $v['id'],
                             'lat' => $v["geo_lat"],
                             'lng' => $v["geo_lng"],
                             'additional' => $additional,
-                            'payment' => [
-                                waShipping::PAYMENT_TYPE_CARD => isset($v["card_accepted"]) ? true : false,
+                            'payment' => array(
+                                waShipping::PAYMENT_TYPE_CARD => $card,
                                 waShipping::PAYMENT_TYPE_CASH => true,
-                            ],
-                        ],
-                    ],
-                ],
-            ];
-            $i++;
-        };
+                            ),
+                        ),
+                    ),
+                );
+            };
 
-        return $deliveres;
+        return $deliveries;
     }
 
     private function getArrayPost($cityTo)
     {
-
+        return $post = array(
+                'name' => 'Почта', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                'comment' => 'описание необязательно', //необязательное описание варианта доставки
+                'est_delivery' => '2-3', //произвольная строка, содержащая  информацию о примерном времени доставки
+                'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
+                'rate' => 100, //точная стоимость доставки
+                'type' => waShipping::TYPE_POST, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
+                'service' => 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
+        );
     }
 
     private function getArrayTodoor($cityTo)
     {
-
+        return $todoor = array(
+                'name' => 'Курьер', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                'comment' => 'описание необязательно', //необязательное описание варианта доставки
+                'est_delivery' => '1-2', //произвольная строка, содержащая  информацию о примерном времени доставки
+                'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
+                'rate' => 101, //точная стоимость доставки
+                'type' => waShipping::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
+                'service' => 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
+        );
     }
 
 }
