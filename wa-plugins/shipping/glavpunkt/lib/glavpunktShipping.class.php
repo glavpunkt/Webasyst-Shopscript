@@ -74,15 +74,13 @@ class glavpunktShipping extends waShipping
     /**
      * Возвращает массив со всеми пвз в городе доставки без цены
      *
-     * @param string $cityTo название города назначения
      * @return array
-     * @throws Exception
      */
     private function getPunkts()
     {
         $url = 'https://glavpunkt.ru/api/pvz_list?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city');
 
-        return $this->cUrl($url);
+        return $this->request($url);
     }
 
     /**
@@ -113,11 +111,11 @@ class glavpunktShipping extends waShipping
         }
 
         $url = 'https://glavpunkt.ru/api/get_tarif?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city') . '&serv=выдача&paymentType=cash&weight=1&price=' . $price = $this->getTotalPrice();
-        $res = $this->cUrl($url);
+        $res = $this->request($url);
 
         if (isset($res['tarifRange'])) {
             $url = 'https://glavpunkt.ru/api-1.1/get_tarifs';
-            $res = $this->cUrl($url, $punktsWithTarif, true);
+            $res = $this->request($url, $punktsWithTarif);
             foreach ($res as $kTarif => $vTarif) {
                 foreach ($punkts as $k => $v) {
                     if ($kTarif == $k) {
@@ -196,18 +194,23 @@ class glavpunktShipping extends waShipping
         );
     }
 
-    private function cUrl($url, $data = null, $post = false)
+    /**
+     * Выполнение запроса
+     * 
+     * @param string $url 
+     * @param array $data массив параметров для передачи POST запросом
+     * @return array
+     * @throws Exception
+     */
+    private function request($url, $data = null)
     {
         $curl = curl_init($url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
 
-        if ($post) {
-            curl_setopt($curl, CURLOPT_POST, true);
-        }
-
         if (!is_null($data)) {
             $encodeData = json_encode($data);
             curl_setopt($curl, CURLOPT_POSTFIELDS, $encodeData);
+            curl_setopt($curl, CURLOPT_POST, true);
         }
 
         $out = curl_exec($curl);
