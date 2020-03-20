@@ -20,26 +20,26 @@ class glavpunktShipping extends waShipping
         $deliveries = array();
         $cityTo = $this->getAddress('city');
 
-        if (isset($cityTo)){
-            if (isset($this->optionsDelivery['pickup'])){
+        if (isset($cityTo)) {
+            if (isset($this->optionsDelivery['pickup'])) {
                 $deliveries = $this->getArrayPickup($cityTo);
             }
 
-            if (isset($this->optionsDelivery['post'])){
+            if (isset($this->optionsDelivery['post'])) {
                 $deliveries['post'] = $this->getArrayPost($cityTo);
             }
 
-            if (isset($this->optionsDelivery['courier'])){
+            if (isset($this->optionsDelivery['courier'])) {
                 $deliveries['courier'] = $this->getArrayTodoor($cityTo);
             }
         } else {
             // обязательное сообщение ошибки для пользователя
-            $deliveries = [
+            $deliveries = array(
                 array(
                     'rate'    => null,
                     'comment' => 'Для расчета стоимости доставки укажите регион доставки',
                 ),
-            ];
+            );
         }
 
         return $deliveries;
@@ -78,7 +78,8 @@ class glavpunktShipping extends waShipping
      * @return array
      * @throws Exception
      */
-    private function getPunkts($cityTo){
+    private function getPunkts($cityTo)
+    {
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, 'https://glavpunkt.ru/api/pvz_list?cityFrom=' . $this->cityFrom . '&cityTo=' . $cityTo);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
@@ -86,6 +87,7 @@ class glavpunktShipping extends waShipping
         $out = curl_exec($curl);
         curl_close($curl);
         $res = json_decode($out, true);
+
         if (is_null($res)) {
             throw new Exception("Неверный JSON ответ: " . $out);
         }
@@ -101,12 +103,13 @@ class glavpunktShipping extends waShipping
      * @return array
      * @throws Exception
      */
-    private function getPunktsWithTarif($cityTo, $cityFrom){
-
+    private function getPunktsWithTarif($cityTo, $cityFrom)
+    {
         $punkts = $this->getPunkts($cityTo);
         $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
         $price = $this->getTotalPrice();
         $punktsWithTarif = array();
+
         foreach ($punkts as $k => $v){
             $punktsWithTarif[$v['id']] = array(
                 'serv' => "выдача по РФ",
@@ -129,14 +132,15 @@ class glavpunktShipping extends waShipping
         $out = curl_exec($curl);
         curl_close($curl);
         $res = json_decode($out, true);
+
         if (is_null($res)) {
             throw new Exception("Неверный JSON ответ: " . $out);
         }
 
         foreach ($res as $kTarif => $vTarif) {
-            foreach ($punkts as $k => $v){
-                if ($kTarif == $k){
-                    $punkts[$k] += array('tarif' => $vTarif['tarif']);
+            foreach ($punkts as $k => $v) {
+                if ($kTarif == $k) {
+                    $punkts[$k]['tarif'] = $vTarif['tarif'];
                 }
             }
         }
@@ -149,10 +153,6 @@ class glavpunktShipping extends waShipping
         $tarifForPunktsInSelectedCity = $this->getPunktsWithTarif($cityTo, $this->cityFrom);
 
         foreach ($tarifForPunktsInSelectedCity as $k => $v) {
-            $card = false;
-            if (isset($v["card_accepted"])){
-               $card = $v["card_accepted"];
-            }
 
             $additional = isset($v["email"]) ? 'Email: ' . $v["email"] . '; ' : '';
             $additional .= isset($v["phone"]) ? 'Телефон: ' . $v["phone"] . '; ' : '';
@@ -165,7 +165,7 @@ class glavpunktShipping extends waShipping
                     'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
                     'rate' => $v['tarif'], //точная стоимость доставки
                     'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                    'service' => $v["operator"] != "gp" ? $v['operator'] : 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
+                    'service' => $v["operator"] != "gp" ? $v['operator'] : 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
                     'custom_data' => array(
                         'pickup' => array(
                             'id' => $v['id'],
@@ -173,7 +173,7 @@ class glavpunktShipping extends waShipping
                             'lng' => $v["geo_lng"],
                             'additional' => $additional,
                             'payment' => array(
-                                waShipping::PAYMENT_TYPE_CARD => $card,
+                                waShipping::PAYMENT_TYPE_CARD => (isset($v["card_accepted"]) && $v["card_accepted"] == "1"),
                                 waShipping::PAYMENT_TYPE_CASH => true,
                             ),
                         ),
