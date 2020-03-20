@@ -78,21 +78,11 @@ class glavpunktShipping extends waShipping
      * @return array
      * @throws Exception
      */
-    private function getPunkts($cityTo)
+    private function getPunkts()
     {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, 'https://glavpunkt.ru/api/pvz_list?cityFrom=' . $this->cityFrom . '&cityTo=' . $cityTo);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
+        $url = 'https://glavpunkt.ru/api/pvz_list?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city');
 
-        $out = curl_exec($curl);
-        curl_close($curl);
-        $res = json_decode($out, true);
-
-        if (is_null($res)) {
-            throw new Exception("Неверный JSON ответ: " . $out);
-        }
-
-        return $res;
+        return $this->cUrl($url);
     }
 
     /**
@@ -105,7 +95,7 @@ class glavpunktShipping extends waShipping
      */
     private function getPunktsWithTarif($cityTo, $cityFrom)
     {
-        $punkts = $this->getPunkts($cityTo);
+        $punkts = $this->getPunkts();
         $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
         $price = $this->getTotalPrice();
         $punktsWithTarif = array();
@@ -122,20 +112,8 @@ class glavpunktShipping extends waShipping
             );
         }
 
-        $data = json_encode($punktsWithTarif);
-
-        $curl = curl_init('https://glavpunkt.ru/api-1.1/get_tarifs');
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
-        curl_setopt($curl, CURLOPT_POST, true);
-        curl_setopt($curl, CURLOPT_POSTFIELDS, $data);
-
-        $out = curl_exec($curl);
-        curl_close($curl);
-        $res = json_decode($out, true);
-
-        if (is_null($res)) {
-            throw new Exception("Неверный JSON ответ: " . $out);
-        }
+        $url = 'https://glavpunkt.ru/api-1.1/get_tarifs';
+        $res = $this->cUrl($url, $punktsWithTarif, true);
 
         foreach ($res as $kTarif => $vTarif) {
             foreach ($punkts as $k => $v) {
@@ -208,6 +186,31 @@ class glavpunktShipping extends waShipping
                 'type' => waShipping::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                 'service' => 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
+    }
+
+    private function cUrl($url, $data = null, $post = false)
+    {
+        $curl = curl_init($url);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
+
+        if ($post) {
+            curl_setopt($curl, CURLOPT_POST, true);
+        }
+
+        if (!is_null($data)) {
+            $encodeData = json_encode($data);
+            curl_setopt($curl, CURLOPT_POSTFIELDS, $encodeData);
+        }
+
+        $out = curl_exec($curl);
+        curl_close($curl);
+        $res = json_decode($out, true);
+
+        if (is_null($res)) {
+            throw new Exception("Неверный JSON ответ: " . $out);
+        }
+
+        return $res;
     }
 
 }
