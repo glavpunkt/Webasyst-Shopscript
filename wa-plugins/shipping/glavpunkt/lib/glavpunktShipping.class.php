@@ -104,7 +104,7 @@ class glavpunktShipping extends waShipping
         if (isset($res['tarifRange'])) {
             $url = 'https://glavpunkt.ru/api-1.1/get_tarifs';
             $res = $this->request($url, $punktsWithTarif);
-            
+
             foreach ($res as $kTarif => $vTarif) {
                 foreach ($punkts as $k => $v) {
                     if ($kTarif == $k) {
@@ -127,35 +127,37 @@ class glavpunktShipping extends waShipping
     {
         $tarifForPunktsInSelectedCity = $this->punkts($cityTo, $this->cityFrom);
 
+        $deliveries['pickup_gp'] = array(
+            'name' => 'Пункты выдачи Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+            'comment' => 'описание необязательно', //необязательное описание варианта доставки
+            'est_delivery' => '1-2',//$v["delivery_period"], //произвольная строка, содержащая  информацию о примерном времени доставки
+            'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
+            'rate' => 123,//$v['tarif'], //точная стоимость доставки
+            'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
+            'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
+        );
+
         foreach ($tarifForPunktsInSelectedCity as $k => $v) {
 
             $additional = isset($v["email"]) ? 'Email: ' . $v["email"] . '; ' : '';
             $additional .= isset($v["phone"]) ? 'Телефон: ' . $v["phone"] . '; ' : '';
             $additional .= isset($v["work_time"]) ? 'Режим работы: ' . $v["work_time"] . '; ' : '';
 
-            $deliveries[$v['id']] = array(
-                    'name' => $v["address"], //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                    'comment' => 'описание необязательно', //необязательное описание варианта доставки
-                    'est_delivery' => $v["delivery_period"], //произвольная строка, содержащая  информацию о примерном времени доставки
-                    'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                    'rate' => $v['tarif'], //точная стоимость доставки
-                    'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                    'service' => $v["operator"] != "gp" ? $v['operator'] : 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
-                    'custom_data' => array(
-                        $v['custom_data'] => array(
-                            'id' => $v['id'],
-                            'lat' => $v["geo_lat"],
-                            'lng' => $v["geo_lng"],
-                            'additional' => $additional,
-                            'payment' => array(
-                                waShipping::PAYMENT_TYPE_CARD => (isset($v["card_accepted"]) && $v["card_accepted"] == "1"),
-                                waShipping::PAYMENT_TYPE_CASH => true,
-                            ),
-                        ),
+            $deliveries['pickup_gp']['custom_data'][$v['id']] = array(
+                    'id' => $v['id'],
+                    'lat' => $v["geo_lat"],
+                    'lng' => $v["geo_lng"],
+                    'additional' => $additional,
+                    'payment' => array(
+                        waShipping::PAYMENT_TYPE_CARD => (isset($v["card_accepted"]) && $v["card_accepted"] == "1"),
+                        waShipping::PAYMENT_TYPE_CASH => true,
                     ),
                 );
             };
 
+        echo "<pre>";
+        var_dump($deliveries);
+        echo "</pre>";
         return $deliveries;
     }
 
