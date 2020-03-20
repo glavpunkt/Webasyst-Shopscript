@@ -72,18 +72,6 @@ class glavpunktShipping extends waShipping
     }
 
     /**
-     * Возвращает массив со всеми пвз в городе доставки без цены
-     *
-     * @return array
-     */
-    private function getPunkts()
-    {
-        $url = 'https://glavpunkt.ru/api/pvz_list?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city');
-
-        return $this->request($url);
-    }
-
-    /**
      * Возвращает массив со всеми пвз в городе доставки и ценой
      *
      * @param string $cityTo название города назначения
@@ -91,9 +79,9 @@ class glavpunktShipping extends waShipping
      * @return array
      * @throws Exception
      */
-    private function getPunktsWithTarif($cityTo, $cityFrom)
+    private function punkts($cityTo, $cityFrom)
     {
-        $punkts = $this->getPunkts();
+        $punkts = $this->request('https://glavpunkt.ru/api/pvz_list?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city'));
         $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
         $price = $this->getTotalPrice();
         $punktsWithTarif = array();
@@ -110,22 +98,25 @@ class glavpunktShipping extends waShipping
             );
         }
 
-        $url = 'https://glavpunkt.ru/api/get_tarif?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city') . '&serv=выдача&paymentType=cash&weight=1&price=' . $price = $this->getTotalPrice();
+        $url = 'https://glavpunkt.ru/api/get_tarif?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city') . '&serv=выдача&paymentType=cash&weight=1&price=' . $price;
         $res = $this->request($url);
 
         if (isset($res['tarifRange'])) {
             $url = 'https://glavpunkt.ru/api-1.1/get_tarifs';
             $res = $this->request($url, $punktsWithTarif);
+            
             foreach ($res as $kTarif => $vTarif) {
                 foreach ($punkts as $k => $v) {
                     if ($kTarif == $k) {
                         $punkts[$k]['tarif'] = $vTarif['tarif'];
+                        $punkts[$k]['custom_data'] = $v['id'];
                     }
                 }
             }
         } else {
             foreach ($punkts as $k => $v) {
                 $punkts[$k]['tarif'] = $res['tarif'];
+                $punkts[$k]['custom_data'] = 'pickup_gp';
             }
         }
 
@@ -134,7 +125,7 @@ class glavpunktShipping extends waShipping
 
     private function getArrayPickup($cityTo)
     {
-        $tarifForPunktsInSelectedCity = $this->getPunktsWithTarif($cityTo, $this->cityFrom);
+        $tarifForPunktsInSelectedCity = $this->punkts($cityTo, $this->cityFrom);
 
         foreach ($tarifForPunktsInSelectedCity as $k => $v) {
 
@@ -151,7 +142,7 @@ class glavpunktShipping extends waShipping
                     'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                     'service' => $v["operator"] != "gp" ? $v['operator'] : 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
                     'custom_data' => array(
-                        'pickup' => array(
+                        $v['custom_data'] => array(
                             'id' => $v['id'],
                             'lat' => $v["geo_lat"],
                             'lng' => $v["geo_lng"],
