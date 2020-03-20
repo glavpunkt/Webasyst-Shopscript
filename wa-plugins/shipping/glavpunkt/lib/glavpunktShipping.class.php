@@ -112,14 +112,22 @@ class glavpunktShipping extends waShipping
             );
         }
 
-        $url = 'https://glavpunkt.ru/api-1.1/get_tarifs';
-        $res = $this->cUrl($url, $punktsWithTarif, true);
+        $url = 'https://glavpunkt.ru/api/get_tarif?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city') . '&serv=выдача&paymentType=cash&weight=1&price=' . $price = $this->getTotalPrice();
+        $res = $this->cUrl($url);
 
-        foreach ($res as $kTarif => $vTarif) {
-            foreach ($punkts as $k => $v) {
-                if ($kTarif == $k) {
-                    $punkts[$k]['tarif'] = $vTarif['tarif'];
+        if (isset($res['tarifRange'])) {
+            $url = 'https://glavpunkt.ru/api-1.1/get_tarifs';
+            $res = $this->cUrl($url, $punktsWithTarif, true);
+            foreach ($res as $kTarif => $vTarif) {
+                foreach ($punkts as $k => $v) {
+                    if ($kTarif == $k) {
+                        $punkts[$k]['tarif'] = $vTarif['tarif'];
+                    }
                 }
+            }
+        } else {
+            foreach ($punkts as $k => $v) {
+                $punkts[$k]['tarif'] = $res['tarif'];
             }
         }
 
