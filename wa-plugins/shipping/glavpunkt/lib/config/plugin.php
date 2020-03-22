@@ -1,6 +1,6 @@
 <?php
 return array(
-    'name' => 'Доставка Glavpunkt',
+    'name' => 'Доставка Главпункт',
     'description' => 'Доставка Главпункт',
     'icon' => 'img/logo16.png',
     'logo' => 'img/logo.png',
