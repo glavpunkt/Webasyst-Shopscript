@@ -98,7 +98,8 @@ class glavpunktShipping extends waShipping
             );
         }
 
-        $url = 'https://glavpunkt.ru/api/get_tarif?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city') . '&serv=выдача&paymentType=cash&weight=1&price=' . $price;
+        $url = 'https://glavpunkt.ru/api/get_tarif?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city')
+            . '&serv=выдача&paymentType=cash&weight=' . $weight . '&price=' . $price;
         $tarif = $this->request($url);
 
         if (isset($tarif['tarifRange'])) {
@@ -158,27 +159,59 @@ class glavpunktShipping extends waShipping
 
     private function getArrayPost($cityTo)
     {
+        $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
+        $zip = $this->getAddress('zip');
+        $cost = '';
+        $est_delivery = '';
+
+        if ($this->cityFrom == 'Москва') {
+            $cityFrom = 'MSK';
+        } else {
+            $cityFrom = 'SPB';
+        }
+
+        if (isset($zip)) {
+            $url = 'https://glavpunkt.ru/api/get_pochta_tarif?cityFrom=' . $cityFrom . '&index=' . $zip
+                . '&paymentType=cash&weight=' . $weight . '&price=' . $this->getTotalPrice();
+            $tarif = $this->request($url);
+
+            if ($tarif['result'] == 'error') {
+                return null;
+            }
+
+            $cost = $tarif['tarifTotal'];
+            $est_delivery = $tarif['period'];
+        }
+
         return $post = array(
                 'name' => 'Почта', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                'comment' => 'описание необязательно', //необязательное описание варианта доставки
-                'est_delivery' => '2-3', //произвольная строка, содержащая  информацию о примерном времени доставки
+                'est_delivery' => $est_delivery, //произвольная строка, содержащая  информацию о примерном времени доставки
                 'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => 100, //точная стоимость доставки
+                'rate' => $cost, //точная стоимость доставки
                 'type' => waShipping::TYPE_POST, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                'service' => 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
+                'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
     }
 
     private function getArrayTodoor($cityTo)
     {
+        $est_delivery = '';
+        $url = 'https://glavpunkt.ru/api/get_tarif?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city')
+            . '&serv=курьерская доставка&paymentType=cash&weight=1&price=' . $this->getTotalPrice();
+        $tarif = $this->request($url);
+
+        if ($tarif['result'] == 'error') {
+            return null;
+        }
+        $est_delivery = $tarif['period'];
+
         return $todoor = array(
                 'name' => 'Курьер', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                'comment' => 'описание необязательно', //необязательное описание варианта доставки
-                'est_delivery' => '1-2', //произвольная строка, содержащая  информацию о примерном времени доставки
+                'est_delivery' => $est_delivery, //произвольная строка, содержащая  информацию о примерном времени доставки
                 'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => 101, //точная стоимость доставки
+                'rate' => $tarif['tarif'], //точная стоимость доставки
                 'type' => waShipping::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                'service' => 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
+                'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
     }
 
@@ -210,6 +243,32 @@ class glavpunktShipping extends waShipping
         }
 
         return $res;
+    }
+
+    /**
+     * Обязательные поля для каждого типа доставки
+     *
+     * @param array $service
+     * @return array
+     */
+    public function requestedAddressFieldsForService($service)
+    {
+        $addressField = null;
+
+        if ($service['type'] == 'todoor') {
+            $addressField = array(
+                'street' => array('required' => true,),
+                'city' => array('required' => true,),
+            );
+        }
+
+        if ($service['type'] == 'post') {
+            $addressField = array(
+                'zip' => array('cost' => true, 'required' => true,),
+            );
+        }
+
+        return $addressField;
     }
 
 }
