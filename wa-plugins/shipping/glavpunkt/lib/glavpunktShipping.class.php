@@ -81,7 +81,13 @@ class glavpunktShipping extends waShipping
      */
     private function punkts($cityTo, $cityFrom)
     {
-        $punkts = $this->request('https://glavpunkt.ru/api/pvz_list?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city'));
+        $params = array(
+            'cityFrom' => $this->cityFrom,
+            'cityTo' => $this->getAddress('city')
+        );
+
+        $punkts = $this->request('https://glavpunkt.ru/api/pvz_list?' . http_build_query($params));
+
         $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
         $price = $this->getTotalPrice();
         $data = array();
@@ -98,7 +104,16 @@ class glavpunktShipping extends waShipping
             );
         }
 
-        $url = 'https://glavpunkt.ru/api/get_tarif?cityFrom=' . $this->cityFrom . '&cityTo=' . $this->getAddress('city') . '&serv=выдача&paymentType=cash&weight=1&price=' . $price;
+        $params = array(
+            'cityFrom' => $this->cityFrom,
+            'cityTo' => $this->getAddress('city'),
+            'serv' => 'выдача',
+            'paymentType' => 'cash',
+            'weight' => $weight,
+            'price' => $price
+        );
+
+        $url = 'https://glavpunkt.ru/api/get_tarif?' . http_build_query($params);
         $tarif = $this->request($url);
 
         if (isset($tarif['tarifRange'])) {
@@ -158,27 +173,78 @@ class glavpunktShipping extends waShipping
 
     private function getArrayPost($cityTo)
     {
+        $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
+        $zip = $this->getAddress('zip');
+        $cost = '';
+        $estDelivery = '';
+
+        if ($this->cityFrom == 'Москва') {
+            $cityFrom = 'MSK';
+        } else {
+            $cityFrom = 'SPB';
+        }
+
+        if (isset($zip)) {
+            $params = array(
+                'cityFrom' => $cityFrom,
+                'index' => $zip,
+                'paymentType' => 'cash',
+                'weight' => $weight,
+                'price' => $this->getTotalPrice()
+            );
+
+            $url = 'https://glavpunkt.ru/api/get_pochta_tarif?' . http_build_query($params);
+            var_dump($url);
+            $tarif = $this->request($url);
+var_dump($tarif);
+            if ($tarif['result'] == 'error') {
+                return null;
+            }
+
+            $cost = $tarif['tarifTotal'];
+            $estDelivery = $tarif['period'];
+        }
+
         return $post = array(
-                'name' => 'Почта', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                'comment' => 'описание необязательно', //необязательное описание варианта доставки
-                'est_delivery' => '2-3', //произвольная строка, содержащая  информацию о примерном времени доставки
+                'name' => 'Почта РФ', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
                 'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => 100, //точная стоимость доставки
+                'rate' => $cost, //точная стоимость доставки
                 'type' => waShipping::TYPE_POST, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                'service' => 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
+                'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
     }
 
     private function getArrayTodoor($cityTo)
     {
+        $estDelivery = '';
+        $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
+
+        $params = array(
+            'cityFrom' => $this->cityFrom,
+            'cityTo' => $this->getAddress('city'),
+            'serv' => 'курьерская доставка',
+            'paymentType' => 'cash',
+            'weight' => $weight,
+            'price' => $this->getTotalPrice()
+        );
+
+        $url = 'https://glavpunkt.ru/api/get_tarif?' . http_build_query($params);
+        $tarif = $this->request($url);
+
+        if ($tarif['result'] == 'error') {
+            return null;
+        }
+
+        $estDelivery = $tarif['period'];
+
         return $todoor = array(
-                'name' => 'Курьер', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                'comment' => 'описание необязательно', //необязательное описание варианта доставки
-                'est_delivery' => '1-2', //произвольная строка, содержащая  информацию о примерном времени доставки
+                'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
                 'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => 101, //точная стоимость доставки
+                'rate' => $tarif['tarif'], //точная стоимость доставки
                 'type' => waShipping::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                'service' => 'Glavpunkt', //название службы доставки для указания компании, выполняющей фактическую доставку
+                'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
     }
 
@@ -210,6 +276,28 @@ class glavpunktShipping extends waShipping
         }
 
         return $res;
+    }
+
+    /**
+     * Обязательные поля для каждого типа доставки
+     *
+     * @param array $service
+     * @return array
+     */
+    public function requestedAddressFieldsForService($service)
+    {
+        if ($service['type'] == 'todoor') {
+
+            return array(
+                'street' => array('required' => true),
+                'city' => array('required' => true)
+            );
+        } elseif ($service['type'] == 'post') {
+
+            return array(
+                'zip' => array('cost' => true, 'required' => true)
+            );
+        }
     }
 
 }
