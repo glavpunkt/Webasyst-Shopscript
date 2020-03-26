@@ -292,7 +292,7 @@ var_dump($tarif);
                 'street' => array('required' => true),
                 'city' => array('required' => true)
             );
-        } else if ($service['type'] == 'post') {
+        } elseif ($service['type'] == 'post') {
 
             return array(
                 'zip' => array('cost' => true, 'required' => true)
