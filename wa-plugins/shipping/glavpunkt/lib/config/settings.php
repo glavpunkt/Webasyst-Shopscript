@@ -34,11 +34,11 @@ return array(
     'daysForCourier' => array(
         'title' => 'Кол-во дней добавляемых к сроку доставки для курьерской доставки',
         'control_type' => waHtmlControl::INPUT,
-        'value'        => '',
+        'value'        => 0,
     ),
     'costOfTransfer' => array(
         'title' => 'Учитывать стоимость перемещения между пунктами',
-        'control_type' => waHtmlControl::GROUPBOX,
+        'control_type' => waHtmlControl::CHECKBOX,
         'options' => array(
             'on' => 'Да',
         ),
@@ -46,12 +46,12 @@ return array(
     'freeShippingMSK' => array(
         'title' => 'Бесплатная доставка/выдача для Москвы при цене от',
         'control_type' => waHtmlControl::INPUT,
-        'value'        => 1,
+        'value'        => '',
     ),
     'freeShippingSPB' => array(
         'title' => 'Бесплатная доставка/выдача для СПБ при цене от',
         'control_type' => waHtmlControl::INPUT,
-        'value'        => 1,
+        'value'        => '',
     ),
     'fixedShippingMSK' => array(
         'title' => 'Фиксированная стоимость доставки для Москвы',

@@ -242,7 +242,7 @@ class glavpunktShipping extends waShipping
         $estDelivery = $tarif['period'];
 
         if ( $this->daysForCourier != '') {
-            $estDelivery = ($this->printForInsales($tarif['period'], $this->daysForCourier))['description'];
+            $estDelivery = ($this->periodDelivery($tarif['period'], $this->daysForCourier))['description'];
         }
 
         return $todoor = array(
@@ -319,7 +319,7 @@ class glavpunktShipping extends waShipping
      *  "description" => 'от 2 до 5 дней'
      * ]
      */
-    private function printForInsales($period, $extraDays)
+    private function periodDelivery($period, $extraDays)
     {
         preg_match_all('/\d+/', $period, $match);
         if (count($match[0]) == 1 && $extraDays === 0) {
