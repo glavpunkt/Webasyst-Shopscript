@@ -242,7 +242,7 @@ class glavpunktShipping extends waShipping
         $estDelivery = $tarif['period'];
 
         if ( $this->daysForCourier != '') {
-            $estDelivery = ($this->periodDelivery($tarif['period'], $this->daysForCourier))['description'];
+            $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
         }
 
         return $todoor = array(
