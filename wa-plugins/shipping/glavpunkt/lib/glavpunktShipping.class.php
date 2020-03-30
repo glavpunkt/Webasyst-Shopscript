@@ -150,6 +150,8 @@ class glavpunktShipping extends waShipping
             $additional .= isset($v["phone"]) ? 'Телефон: ' . $v["phone"] . '; ' : '';
             $additional .= isset($v["work_time"]) ? 'Режим работы: ' . $v["work_time"] . '; ' : '';
 
+            $v['tarif'] = $this->checkCostShipping() !== false ? $this->checkCostShipping() : $v['tarif'];
+
             $deliveries[$v['id']] = array(
                     'name' => $v["address"], //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                     'est_delivery' => $v["delivery_period"], //произвольная строка, содержащая  информацию о примерном времени доставки
@@ -244,6 +246,8 @@ class glavpunktShipping extends waShipping
         if ( $this->daysForCourier != '') {
             $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
         }
+
+        $tarif['tarif'] = $this->checkCostShipping() !== false? $this->checkCostShipping() : $tarif['tarif'];
 
         return $todoor = array(
                 'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
@@ -345,5 +349,37 @@ class glavpunktShipping extends waShipping
                 ? "дней"
                 : ($num > 1 ? "дня" : "день")
             );
+    }
+
+    /**
+     * Проверяет параметы доставки и возвращает либо false либо стоимоть доставки
+     *
+     * @return mixed
+     */
+    private function checkCostShipping()
+    {
+        $cost = false;
+
+        if ($this->getAddress('city') == 'Санкт-Петербург') {
+            if (isset($this->fixedShippingSPB)) {
+                $cost = $this->fixedShippingSPB;
+            }
+
+            if (isset($this->freeShippingSPB) && (int)$this->freeShippingSPB < (int)$this->getTotalPrice()) {
+                $cost = 0;
+            }
+        }
+
+        if ($this->getAddress('city') == 'Москва') {
+            if (isset($this->fixedShippingMSK)) {
+                $cost = $this->fixedShippingMSK;
+            }
+
+            if (isset($this->freeShippingMSK) && (int)$this->freeShippingMSK < (int)$this->getTotalPrice()) {
+                $cost = 0;
+            }
+        }
+
+        return $cost;
     }
 }
