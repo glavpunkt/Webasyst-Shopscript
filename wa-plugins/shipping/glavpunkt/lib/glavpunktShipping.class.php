@@ -150,7 +150,7 @@ class glavpunktShipping extends waShipping
             $additional .= isset($v["phone"]) ? 'Телефон: ' . $v["phone"] . '; ' : '';
             $additional .= isset($v["work_time"]) ? 'Режим работы: ' . $v["work_time"] . '; ' : '';
 
-            $v['tarif'] = $this->checkCostShipping() !== false ? $this->checkCostShipping() : $v['tarif'];
+            $v['tarif'] = $this->checkCostShipping($v['tarif']) !== false ? $this->checkCostShipping($v['tarif']) : $v['tarif'];
 
             $deliveries[$v['id']] = array(
                     'name' => $v["address"], //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
@@ -243,11 +243,11 @@ class glavpunktShipping extends waShipping
 
         $estDelivery = $tarif['period'];
 
-        if ( $this->daysForCourier != '') {
+        if ( $this->daysForCourier != 0) {
             $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
         }
 
-        $tarif['tarif'] = $this->checkCostShipping() !== false? $this->checkCostShipping() : $tarif['tarif'];
+        $tarif['tarif'] = $this->checkCostShipping($tarif['tarif']) !== false? $this->checkCostShipping($tarif['tarif']) : $tarif['tarif'];
 
         return $todoor = array(
                 'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
@@ -354,19 +354,18 @@ class glavpunktShipping extends waShipping
     /**
      * Проверяет параметы доставки и возвращает либо false либо стоимоть доставки
      *
-     * @return mixed
+     * @param string $cost
+     * @return string
      */
-    private function checkCostShipping()
+    private function checkCostShipping($cost)
     {
-        $cost = false;
-
         if ($this->getAddress('city') == 'Санкт-Петербург') {
             if (isset($this->fixedShippingSPB)) {
                 $cost = $this->fixedShippingSPB;
             }
 
             if (isset($this->freeShippingSPB) && (int)$this->freeShippingSPB < (int)$this->getTotalPrice()) {
-                $cost = 0;
+                $cost = '0';
             }
         }
 
@@ -376,7 +375,7 @@ class glavpunktShipping extends waShipping
             }
 
             if (isset($this->freeShippingMSK) && (int)$this->freeShippingMSK < (int)$this->getTotalPrice()) {
-                $cost = 0;
+                $cost = '0';
             }
         }
 
