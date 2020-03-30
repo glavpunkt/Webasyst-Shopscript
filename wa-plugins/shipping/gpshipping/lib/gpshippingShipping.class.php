@@ -5,10 +5,10 @@
  *
  * Отвечает за расчёт цены
  *
- * Class glavpunktShipping
+ * Class gpshippingShipping
  * @author SokolovMikhail
  */
-class glavpunktShipping extends waShipping
+class gpshippingShipping extends waShipping
 {
     /**
      * Расчёт стоимости доставки и вывод её
@@ -356,21 +356,21 @@ class glavpunktShipping extends waShipping
     private function checkCostShipping($cost)
     {
         if ($this->getAddress('city') == 'Санкт-Петербург') {
-            if (isset($this->fixedShippingSPB)) {
+            if ($this->fixedShippingSPB !== '') {
                 $cost = $this->fixedShippingSPB;
             }
 
-            if (isset($this->freeShippingSPB) && (int)$this->freeShippingSPB < (int)$this->getTotalPrice()) {
+            if ($this->freeShippingSPB !== '' && (int)$this->freeShippingSPB < (int)$this->getTotalPrice()) {
                 $cost = '0';
             }
         }
 
         if ($this->getAddress('city') == 'Москва') {
-            if (isset($this->fixedShippingMSK)) {
+            if ($this->fixedShippingMSK !== '') {
                 $cost = $this->fixedShippingMSK;
             }
 
-            if (isset($this->freeShippingMSK) && (int)$this->freeShippingMSK < (int)$this->getTotalPrice()) {
+            if ($this->freeShippingMSK !== '' && (int)$this->freeShippingMSK < (int)$this->getTotalPrice()) {
                 $cost = '0';
             }
         }
