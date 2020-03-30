@@ -113,7 +113,7 @@ class glavpunktShipping extends waShipping
             'price' => $price
         );
 
-        if ( isset($this->costOfTransfer['on'])) {
+        if (isset($this->costOfTransfer['on'])) {
             $params['transfer'] = 'on';
         }
 
@@ -241,7 +241,7 @@ class glavpunktShipping extends waShipping
 
         $estDelivery = $tarif['period'];
 
-        if ( $this->daysForCourier != '0') {
+        if ( $this->daysForCourier != '') {
             $estDelivery = (int)$tarif['period'] + (int)$this->daysForCourier;
         }
 
