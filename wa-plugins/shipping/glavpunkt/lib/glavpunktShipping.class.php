@@ -150,7 +150,7 @@ class glavpunktShipping extends waShipping
             $additional .= isset($v["phone"]) ? 'Телефон: ' . $v["phone"] . '; ' : '';
             $additional .= isset($v["work_time"]) ? 'Режим работы: ' . $v["work_time"] . '; ' : '';
 
-            $v['tarif'] = $this->checkCostShipping($v['tarif']) !== false ? $this->checkCostShipping($v['tarif']) : $v['tarif'];
+            $v['tarif'] = $this->checkCostShipping($v['tarif']);
 
             $deliveries[$v['id']] = array(
                     'name' => $v["address"], //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
@@ -241,13 +241,9 @@ class glavpunktShipping extends waShipping
             return null;
         }
 
-        $estDelivery = $tarif['period'];
+        $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
 
-        if ( $this->daysForCourier != 0) {
-            $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
-        }
-
-        $tarif['tarif'] = $this->checkCostShipping($tarif['tarif']) !== false? $this->checkCostShipping($tarif['tarif']) : $tarif['tarif'];
+        $tarif['tarif'] = $this->checkCostShipping($tarif['tarif']);
 
         return $todoor = array(
                 'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
@@ -321,7 +317,7 @@ class glavpunktShipping extends waShipping
     private function periodDelivery($period, $extraDays)
     {
         preg_match_all('/\d+/', $period, $match);
-        if (count($match[0]) == 1 && $extraDays === 0) {
+        if (count($match[0]) == 1 && $extraDays == 0) {
             $description = $this->printDescriptionForOneDay($match[0][0]);
         } elseif (count($match[0]) == 1 && $extraDays > 0) {
             $min_days = $match[0][0];
