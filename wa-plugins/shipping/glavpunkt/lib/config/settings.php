@@ -54,9 +54,9 @@ return array(
         'value'        => '',
     ),
     'fixedShippingMSK' => array(
-    'title' => 'Фиксированная стоимость доставки для Москвы',
-    'control_type' => waHtmlControl::INPUT,
-    'value'        => '',
+        'title' => 'Фиксированная стоимость доставки для Москвы',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
     ),
     'fixedShippingSPB' => array(
         'title' => 'Фиксированная стоимость доставки для СПБ',
