@@ -221,7 +221,7 @@ class glavpunktShipping extends waShipping
     private function getArrayTodoor($cityTo)
     {
         $estDelivery = '';
-        $weight = $this->getTotalWeight() == $this->weightDefault ? 1 : $this->getTotalWeight();
+        $weight = $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight();
 
         $params = array(
             'cityFrom' => $this->cityFrom,
@@ -242,7 +242,7 @@ class glavpunktShipping extends waShipping
         $estDelivery = $tarif['period'];
 
         if ( $this->daysForCourier != '') {
-            $estDelivery = (int)$tarif['period'] + (int)$this->daysForCourier;
+            $estDelivery = ($this->printForInsales($tarif['period'], $this->daysForCourier))['description'];
         }
 
         return $todoor = array(
@@ -307,4 +307,54 @@ class glavpunktShipping extends waShipping
         }
     }
 
+    /**
+     * Вывод периода доставки
+     *
+     * @param string $period
+     * @param string $extraDays
+     * @return array
+     * [
+     *  "min_days" => 2,
+     *  "max_days" => 5,
+     *  "description" => 'от 2 до 5 дней'
+     * ]
+     */
+    private function printForInsales($period, $extraDays)
+    {
+        preg_match_all('/\d+/', $period, $match);
+        if (count($match[0]) == 1 && $extraDays === 0) {
+            $min_days = $match[0][0];
+            $max_days = $match[0][0];
+            $description = $this->printDescriptionForOneDay($match[0][0]);
+        } elseif (count($match[0]) == 1 && $extraDays > 0) {
+            $min_days = $match[0][0];
+            $max_days = $match[0][0] + $extraDays;
+            $description = "от $min_days до $max_days дней";
+        } elseif (count($match[0]) == 2) {
+            $min_days = $match[0][0];
+            $max_days = $match[0][1] + $extraDays;
+            $description = "от $min_days до $max_days дней";
+        } else {
+            return [];
+        }
+
+        return [
+            "min_days" => $min_days,
+            "max_days" => $max_days,
+            "description" => $description
+        ];
+    }
+
+    /**
+     * Создание описания при условии одного числа в периоде
+     *
+     * @return string
+     */
+    private function printDescriptionForOneDay($num)
+    {
+        return "$num " . ($num >= 5
+                ? "дней"
+                : ($num > 1 ? "дня" : "день")
+            );
+    }
 }

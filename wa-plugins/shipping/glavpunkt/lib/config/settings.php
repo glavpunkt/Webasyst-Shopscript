@@ -46,12 +46,12 @@ return array(
     'freeShippingMSK' => array(
         'title' => 'Бесплатная доставка/выдача для Москвы при цене от',
         'control_type' => waHtmlControl::INPUT,
-        'value'        => '',
+        'value'        => 1,
     ),
     'freeShippingSPB' => array(
         'title' => 'Бесплатная доставка/выдача для СПБ при цене от',
         'control_type' => waHtmlControl::INPUT,
-        'value'        => '',
+        'value'        => 1,
     ),
     'fixedShippingMSK' => array(
         'title' => 'Фиксированная стоимость доставки для Москвы',
