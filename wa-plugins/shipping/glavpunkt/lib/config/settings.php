@@ -25,5 +25,22 @@ return array(
             'post' => 'Доставка Почтой РФ',
             'courier' => 'Курьерская доставка',
         ),
-    )
+    ),
+    'weightDefault' => array(
+        'title' => 'Вес по умолчанию (кг)',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => 1,
+    ),
+    'daysForCourier' => array(
+        'title' => 'Кол-во дней добавляемых к сроку доставки для курьерской доставки',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => 0,
+    ),
+    'costOfTransfer' => array(
+        'title' => 'Учитывать стоимость перемещения между пунктами',
+        'control_type' => waHtmlControl::GROUPBOX,
+        'options' => array(
+            'on' => 'Да',
+        ),
+    ),
 );
