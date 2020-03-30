@@ -88,7 +88,7 @@ class glavpunktShipping extends waShipping
 
         $punkts = $this->request('https://glavpunkt.ru/api/pvz_list?' . http_build_query($params));
 
-        $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
+        $weight = $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight();
         $price = $this->getTotalPrice();
         $data = array();
 
@@ -112,6 +112,10 @@ class glavpunktShipping extends waShipping
             'weight' => $weight,
             'price' => $price
         );
+
+        if (isset($this->costOfTransfer['on'])) {
+            $params['transfer'] = 'on';
+        }
 
         $url = 'https://glavpunkt.ru/api/get_tarif?' . http_build_query($params);
         $tarif = $this->request($url);
@@ -173,7 +177,7 @@ class glavpunktShipping extends waShipping
 
     private function getArrayPost($cityTo)
     {
-        $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
+        $weight = $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight();
         $zip = $this->getAddress('zip');
         $cost = '';
         $estDelivery = '';
@@ -194,9 +198,8 @@ class glavpunktShipping extends waShipping
             );
 
             $url = 'https://glavpunkt.ru/api/get_pochta_tarif?' . http_build_query($params);
-            var_dump($url);
             $tarif = $this->request($url);
-var_dump($tarif);
+
             if ($tarif['result'] == 'error') {
                 return null;
             }
@@ -218,7 +221,7 @@ var_dump($tarif);
     private function getArrayTodoor($cityTo)
     {
         $estDelivery = '';
-        $weight = $this->getTotalWeight() == 0 ? 1 : $this->getTotalWeight();
+        $weight = $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight();
 
         $params = array(
             'cityFrom' => $this->cityFrom,
@@ -237,6 +240,10 @@ var_dump($tarif);
         }
 
         $estDelivery = $tarif['period'];
+
+        if ( $this->daysForCourier != '') {
+            $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
+        }
 
         return $todoor = array(
                 'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
@@ -300,4 +307,43 @@ var_dump($tarif);
         }
     }
 
+    /**
+     * Вывод периода доставки
+     *
+     * @param string $period
+     * @param string $extraDays
+     * @return string
+     */
+    private function periodDelivery($period, $extraDays)
+    {
+        preg_match_all('/\d+/', $period, $match);
+        if (count($match[0]) == 1 && $extraDays === 0) {
+            $description = $this->printDescriptionForOneDay($match[0][0]);
+        } elseif (count($match[0]) == 1 && $extraDays > 0) {
+            $min_days = $match[0][0];
+            $max_days = $match[0][0] + $extraDays;
+            $description = "от $min_days до $max_days дней";
+        } elseif (count($match[0]) == 2) {
+            $min_days = $match[0][0];
+            $max_days = $match[0][1] + $extraDays;
+            $description = "от $min_days до $max_days дней";
+        } else {
+            return '';
+        }
+
+        return $description;
+    }
+
+    /**
+     * Создание описания при условии одного числа в периоде
+     *
+     * @return string
+     */
+    private function printDescriptionForOneDay($num)
+    {
+        return "$num " . ($num >= 5
+                ? "дней"
+                : ($num > 1 ? "дня" : "день")
+            );
+    }
 }
