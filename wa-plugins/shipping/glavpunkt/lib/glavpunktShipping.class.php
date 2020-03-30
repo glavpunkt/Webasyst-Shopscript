@@ -312,19 +312,12 @@ class glavpunktShipping extends waShipping
      *
      * @param string $period
      * @param string $extraDays
-     * @return array
-     * [
-     *  "min_days" => 2,
-     *  "max_days" => 5,
-     *  "description" => 'от 2 до 5 дней'
-     * ]
+     * @return string
      */
     private function periodDelivery($period, $extraDays)
     {
         preg_match_all('/\d+/', $period, $match);
         if (count($match[0]) == 1 && $extraDays === 0) {
-            $min_days = $match[0][0];
-            $max_days = $match[0][0];
             $description = $this->printDescriptionForOneDay($match[0][0]);
         } elseif (count($match[0]) == 1 && $extraDays > 0) {
             $min_days = $match[0][0];
@@ -335,14 +328,10 @@ class glavpunktShipping extends waShipping
             $max_days = $match[0][1] + $extraDays;
             $description = "от $min_days до $max_days дней";
         } else {
-            return [];
+            return '';
         }
 
-        return [
-            "min_days" => $min_days,
-            "max_days" => $max_days,
-            "description" => $description
-        ];
+        return $description;
     }
 
     /**
