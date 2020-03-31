@@ -154,7 +154,7 @@ class gpshippingShipping extends waShipping
 
             $deliveries[$v['id']] = array(
                     'name' => 'Пункт выдачи ' . $v["metro"], //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                    'est_delivery' => $this->periodDelivery($v["delivery_period"], $this->daysForCourier), //произвольная строка, содержащая  информацию о примерном времени доставки
+                    'est_delivery' => $this->periodDelivery($v["delivery_period"], '0'), //произвольная строка, содержащая  информацию о примерном времени доставки
                     'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
                     'rate' => $v['tarif'], //точная стоимость доставки
                     'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
