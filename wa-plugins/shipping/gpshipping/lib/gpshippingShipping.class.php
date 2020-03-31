@@ -153,8 +153,8 @@ class gpshippingShipping extends waShipping
             $v['tarif'] = $this->checkCostShipping($v['tarif']);
 
             $deliveries[$v['id']] = array(
-                    'name' => $v["address"], //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                    'est_delivery' => $v["delivery_period"], //произвольная строка, содержащая  информацию о примерном времени доставки
+                    'name' => 'Пункт выдачи ' . $v["metro"], //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                    'est_delivery' => $this->periodDelivery($v["delivery_period"], '0'), //произвольная строка, содержащая  информацию о примерном времени доставки
                     'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
                     'rate' => $v['tarif'], //точная стоимость доставки
                     'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
@@ -165,6 +165,7 @@ class gpshippingShipping extends waShipping
                             'lat' => $v["geo_lat"],
                             'lng' => $v["geo_lng"],
                             'additional' => $additional,
+                            'way' => $v["address"],
                             'payment' => array(
                                 waShipping::PAYMENT_TYPE_CARD => (isset($v["card_accepted"]) && $v["card_accepted"] == "1"),
                                 waShipping::PAYMENT_TYPE_CASH => true,
@@ -207,7 +208,7 @@ class gpshippingShipping extends waShipping
             }
 
             $cost = $tarif['tarifTotal'];
-            $estDelivery = $tarif['period'];
+            $estDelivery = $this->periodDelivery($tarif['period'], '0');
         }
 
         return $post = array(
@@ -222,7 +223,6 @@ class gpshippingShipping extends waShipping
 
     private function getArrayTodoor($cityTo)
     {
-        $estDelivery = '';
         $weight = $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight();
 
         $params = array(
