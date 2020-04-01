@@ -151,9 +151,14 @@ class gpshippingShipping extends waShipping
             $additional .= isset($v["work_time"]) ? 'Режим работы: ' . $v["work_time"] . '; ' : '';
 
             $v['tarif'] = $this->checkCostShipping($v['tarif']);
+            $namePvz = "Пункт выдачи " . $v["address"];
+
+            if (isset($v["metro"])) {
+                $namePvz = "Пункт выдачи " . $v["metro"];
+            }
 
             $deliveries[$v['id']] = array(
-                    'name' => 'Пункт выдачи ' . $v["address"], //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                    'name' => $namePvz, //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                     'est_delivery' => $this->periodDelivery($v["delivery_period"], '0'), //произвольная строка, содержащая  информацию о примерном времени доставки
                     'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
                     'rate' => $v['tarif'], //точная стоимость доставки
