@@ -146,7 +146,7 @@ class gpshippingShipping extends waShipping
 
         foreach ($tarifForPunktsInSelectedCity as $k => $v) {
 
-            $additional = (isset($v["email"]) ? 'Email: ' . $v["email"] . '; ' : '');
+            $additional = (isset($v["email"]) && $v["email"] != "" ? 'Email: ' . $v["email"] . '; ' : '');
             $additional .= (isset($v["phone"]) && $v["phone"] != "" ? 'Телефон: ' . $v["phone"] . '; ' : '');
 
             $deliveries[$v['id']] = array(
