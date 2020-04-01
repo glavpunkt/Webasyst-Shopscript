@@ -146,9 +146,8 @@ class gpshippingShipping extends waShipping
 
         foreach ($tarifForPunktsInSelectedCity as $k => $v) {
 
-            $additional = isset($v["email"]) ? 'Email: ' . $v["email"] . '; ' : '';
-            $additional .= isset($v["phone"]) ? 'Телефон: ' . $v["phone"] . '; ' : '';
-            $additional .= isset($v["work_time"]) ? 'Режим работы: ' . $v["work_time"] . '; ' : '';
+            $additional = (isset($v["email"]) && $v["email"] != "" ? 'Email: ' . $v["email"] . '; ' : '');
+            $additional .= (isset($v["phone"]) && $v["phone"] != "" ? 'Телефон: ' . $v["phone"] . '; ' : '');
 
             $deliveries[$v['id']] = array(
                     'name' => "Пункт выдачи " . (isset($v["metro"]) ? $v["metro"] : $v["address"]), //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
@@ -168,6 +167,7 @@ class gpshippingShipping extends waShipping
                                 waShipping::PAYMENT_TYPE_CARD => (isset($v["card_accepted"]) && $v["card_accepted"] == "1"),
                                 waShipping::PAYMENT_TYPE_CASH => true,
                             ),
+                            'schedule' => $v["work_time"],
                         ),
                     ),
                 );
