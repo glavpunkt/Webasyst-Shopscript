@@ -146,8 +146,8 @@ class gpshippingShipping extends waShipping
 
         foreach ($tarifForPunktsInSelectedCity as $k => $v) {
 
-            $additional = isset($v["email"]) ? 'Email: ' . $v["email"] . '; ' : '';
-            $additional .= isset($v["phone"]) ? 'Телефон: ' . $v["phone"] . '; ' : '';
+            $additional = (isset($v["email"]) ? 'Email: ' . $v["email"] . '; ' : '');
+            $additional .= (isset($v["phone"]) && $v["phone"] != "" ? 'Телефон: ' . $v["phone"] . '; ' : '');
 
             $deliveries[$v['id']] = array(
                     'name' => "Пункт выдачи " . (isset($v["metro"]) ? $v["metro"] : $v["address"]), //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
