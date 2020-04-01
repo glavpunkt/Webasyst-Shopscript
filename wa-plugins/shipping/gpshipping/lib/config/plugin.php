@@ -4,7 +4,7 @@ return array(
     'description' => 'Доставка Главпункт',
     'icon' => 'img/logo16.png',
     'logo' => 'img/logo.png',
-    'vendor' => '1122018',
+    'vendor' => '1116972',
     'version' => '0.0.1',
     'external' => true, //необязательный параметр
     'external_tracking' => true, //необязательный параметр
