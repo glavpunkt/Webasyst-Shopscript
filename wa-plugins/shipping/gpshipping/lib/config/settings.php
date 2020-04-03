@@ -36,22 +36,22 @@ return array(
         'control_type' => waHtmlControl::INPUT,
         'value'        => '',
     ),
-    'ApiLogin' => array(
+    'apiLogin' => array(
         'title' => 'Логин ЛК',
         'control_type' => waHtmlControl::INPUT,
         'value'        => '',
     ),
-    'ApiToken' => array(
+    'apiToken' => array(
         'title' => 'Токен ЛК',
         'control_type' => waHtmlControl::INPUT,
         'value'        => '',
     ),
-    'MethodDelivery' => array(
+    'methodDelivery' => array(
         'title' => 'Выебите способ передачи товара в Главпункт',
         'control_type' => waHtmlControl::SELECT,
         'options' => array(
             array('value' => 'self_delivery',
-                'title' => 'Самопривоз',),
+                'title' => 'Отгрузка в пункт выдачи',),
             array('value' => 'pickup',
                 'title' => 'Забор',),
         ),

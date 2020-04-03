@@ -4,6 +4,8 @@
  * Класс модуля доставки
  *
  * Отвечает за расчёт цены
+ * Метод draftPackage вызывается при оформлении заказа и при смене статуса заказа на оплачен
+ * Метод cancelPackage вызывается при возврате заказа
  *
  * Class gpshippingShipping
  * @author SokolovMikhail
@@ -94,7 +96,7 @@ class gpshippingShipping extends waShipping
 
         foreach ($punkts as $k => $v){
             $data[$v['id']] = array(
-                'serv' => 'выдача по РФ',
+                'serv' => 'выдача',
                 'cityFrom' => $cityFrom,
                 'cityTo' => $cityTo,
                 'weight' => $weight,
@@ -254,23 +256,6 @@ class gpshippingShipping extends waShipping
     }
 
     /**
-     * Set package state into waShipping::STATE_DRAFT
-     * Вызывается при оформлении заказа и при смене статуса заказа на оплачен
-     * @param waOrder $order
-     * @param array   $shipping_data
-     * @return null|string|string[] null, error or shipping data array
-     */
-    protected function draftPackage(waOrder $order, $shipping_data = array())
-    {
-//        foreach ($order as $k => $v) {
-//            var_dump($k);
-//        }
-        //var_dump($order);
-        //file_put_contents('index.txt', 'draftPackage' . date('H:i:s') . '\n', FILE_APPEND);
-        return null;
-    }
-
-    /**
      * Set package state into waShipping::STATE_READY
      * Вызывается при смене статуса заказа на отправлен
      * @param waOrder $order
@@ -279,25 +264,28 @@ class gpshippingShipping extends waShipping
      */
     protected function readyPackage(waOrder $order, $shipping_data = array())
     {
-        if ($this->ApiLogin == '' || $this->ApiToken == '') {
+        if ($this->apiLogin == '' || $this->apiToken == '') {
             //@TODO сделать выброс ошибки
             return null;
         }
 
-        $data['serv'] = 'выдача';
-
-        if ($order->params['shipping_rate_id'] == 'courier') {
-            $data['serv'] = 'курьерская доставка';
-        }
-
-        if ($order->params['shipping_rate_id'] == 'post') {
-            $data['serv'] = 'почта';
+        $data['serv'] = 'qwe';
+        switch ($order->params['shipping_rate_id']) {
+            case 'courier':
+                $data['serv'] = 'курьерская доставка';
+                break;
+            case 'post':
+                $data['serv'] = 'почта';
+                break;
+            default:
+                $data['serv'] = 'выдача';
+                break;
         }
 
         $data['pvz_id'] = $order->shipping_rate_id;
-        $data['login'] = $this->ApiLogin;
-        $data['token'] = $this->ApiToken;
-        $data['method'] = $this->MethodDelivery;
+        $data['login'] = $this->apiLogin;
+        $data['token'] = $this->apiToken;
+        $data['method'] = $this->methodDelivery;
         $data['punkt_id'] = 'Moskovskaya-A16';
         $data['pickup_id'] = $this->prefixId . $order->id;
         $data['pickup_city'] = $this->cityFrom;
@@ -306,11 +294,13 @@ class gpshippingShipping extends waShipping
         $data['pickup_address'] = $this->pickupAddress;
         $data['pvz_id'] = $order->shipping_rate_id;
         $data['sku'] = $this->prefixId . $order->id;
-        $data['price'] = $order->total;
+        $data['price'] = $order->total; //@TODO найти флаг что заказ оплачен и ставить ноль
         $data['insurance_val'] = $order->subtotal;
         $data['buyer_phone'] = ifempty($order->shipping_address['phone'], $order->getContactField('phone'));
-        $data['buyer_fio'] = ifempty($order->shipping_address['firstname'], $order->getContactField('firstname'));
+        $data['buyer_fio'] = ifempty($order->shipping_address['lastname'], $order->getContactField('lastname'))
+            . ' ' . ifempty($order->shipping_address['firstname'], $order->getContactField('firstname'));
         $data['buyer_email'] = ifempty($order->shipping_address['email'], $order->getContactField('email'));
+        $data['punkt_id'] = 'Moskovskaya-A16';
 
         foreach ($order->items as $k => $v) {
             $data['parts'][$k] = array(
@@ -323,24 +313,8 @@ class gpshippingShipping extends waShipping
             $data['weight'] +=  (int)($v['weight'] == 0 ? 1 : $v['weight']);
         }
 
-        //file_put_contents('index.txt', $order->params['shipping_rate_id'], FILE_APPEND);
-        $result = $this->addToLkGlavpunkt($data);
+        $this->addToLkGlavpunkt($data);
 
-        return null;//$result;
-    }
-
-    /**
-     * Set package state into waShipping::STATE_CANCELED
-     * Вызывается при возврате заказа
-     * @param waOrder $order
-     * @param array   $shipping_data
-     * @return null|string|string[] null, error or shipping data array
-     */
-    protected function cancelPackage(waOrder $order, $shipping_data = array())
-    {
-        //file_put_contents('index.txt', $order->shipping_data['order_id'], FILE_APPEND);
-        //file_put_contents('index.txt', serialize($order), FILE_APPEND);
-        //var_dump('cancelPackage');
         return null;
     }
 
@@ -475,14 +449,14 @@ class gpshippingShipping extends waShipping
      */
     private function addToLkGlavpunkt($data)
     {
-        $data1 = array(
+        $params = array(
             'login' => $data['login'], // логин интернет-магазина
             'token' => $data['token'], // token для авторизации
             'shipment_options' => array(
                 'skip_existed ' => 1, // Если какой-либо из заказов уже создан, то пропустить его.
                 // В противном случае ни один из заказов в запросе не будет создан.
                 'method' => $data['method'], // Метод отгрузки self_delivery - самопривоз, или pickup - забор.
-                'punkt_id' => 'Moskovskaya-A16', // Пункт отгрузки, если метод отгрузки self_delivery
+                'punkt_id' => $data['punkt_id'], // Пункт отгрузки, если метод отгрузки self_delivery
                 'pickup_id' => $data['pickup_id'], // Номер заявки на забор, если метод отгрузки pickup
 
                 // Следующие параметры передавайте, только если нужно создать новый забор (т.е. нужен забор, но у вас еще нет pickup_id)
@@ -510,7 +484,8 @@ class gpshippingShipping extends waShipping
 
         $url = 'https://glavpunkt.ru/api/create_shipment';
 
-        $result = $this->request($url, $data1);
+        $result = $this->request($url, $params);
+
         file_put_contents('index.txt', $result, FILE_APPEND);
 
         return $result;
