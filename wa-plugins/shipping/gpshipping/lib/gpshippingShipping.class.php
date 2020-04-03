@@ -94,13 +94,13 @@ class gpshippingShipping extends waShipping
 
         foreach ($punkts as $k => $v){
             $data[$v['id']] = array(
-                'serv' => "выдача по РФ",
+                'serv' => 'выдача по РФ',
                 'cityFrom' => $cityFrom,
                 'cityTo' => $cityTo,
                 'weight' => $weight,
                 'price' => $price,
                 'punktId' => $v['id'],
-                'paymentType' => "cash"
+                'paymentType' => 'cash'
             );
         }
 
@@ -146,12 +146,12 @@ class gpshippingShipping extends waShipping
 
         foreach ($tarifForPunktsInSelectedCity as $k => $v) {
 
-            $additional = (isset($v["email"]) && $v["email"] != "" ? 'Email: ' . $v["email"] . '; ' : '');
-            $additional .= (isset($v["phone"]) && $v["phone"] != "" ? 'Телефон: ' . $v["phone"] . '; ' : '');
+            $additional = (isset($v['email']) && $v['email'] != '' ? 'Email: ' . $v['email'] . '; ' : '');
+            $additional .= (isset($v['phone']) && $v['phone'] != '' ? 'Телефон: ' . $v['phone'] . '; ' : '');
 
             $deliveries[$v['id']] = array(
-                    'name' => "Пункт выдачи " . (isset($v["metro"]) ? $v["metro"] : $v["address"]), //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                    'est_delivery' => $this->periodDelivery($v["delivery_period"], '0'), //произвольная строка, содержащая  информацию о примерном времени доставки
+                    'name' => 'Пункт выдачи ' . (isset($v['metro']) ? $v['metro'] : $v['address']), //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                    'est_delivery' => $this->periodDelivery($v['delivery_period'], '0'), //произвольная строка, содержащая  информацию о примерном времени доставки
                     'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
                     'rate' => $v['tarif'], //точная стоимость доставки
                     'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
@@ -159,15 +159,15 @@ class gpshippingShipping extends waShipping
                     'custom_data' => array(
                         'pickup' => array(
                             'id' => $v['id'],
-                            'lat' => $v["geo_lat"],
-                            'lng' => $v["geo_lng"],
+                            'lat' => $v['geo_lat'],
+                            'lng' => $v['geo_lng'],
                             'additional' => $additional,
-                            'way' => $v["address"],
+                            'way' => $v['address'],
                             'payment' => array(
-                                waShipping::PAYMENT_TYPE_CARD => (isset($v["card_accepted"]) && $v["card_accepted"] == "1"),
+                                waShipping::PAYMENT_TYPE_CARD => (isset($v['card_accepted']) && $v['card_accepted'] == '1'),
                                 waShipping::PAYMENT_TYPE_CASH => true,
                             ),
-                            'schedule' => $v["work_time"],
+                            'schedule' => $v['work_time'],
                         ),
                     ),
                 );
@@ -254,6 +254,97 @@ class gpshippingShipping extends waShipping
     }
 
     /**
+     * Set package state into waShipping::STATE_DRAFT
+     * Вызывается при оформлении заказа и при смене статуса заказа на оплачен
+     * @param waOrder $order
+     * @param array   $shipping_data
+     * @return null|string|string[] null, error or shipping data array
+     */
+    protected function draftPackage(waOrder $order, $shipping_data = array())
+    {
+//        foreach ($order as $k => $v) {
+//            var_dump($k);
+//        }
+        //var_dump($order);
+        //file_put_contents('index.txt', 'draftPackage' . date('H:i:s') . '\n', FILE_APPEND);
+        return null;
+    }
+
+    /**
+     * Set package state into waShipping::STATE_READY
+     * Вызывается при смене статуса заказа на отправлен
+     * @param waOrder $order
+     * @param array   $shipping_data
+     * @return null|string|string[] null, error or shipping data array
+     */
+    protected function readyPackage(waOrder $order, $shipping_data = array())
+    {
+        if ($this->ApiLogin == '' || $this->ApiToken == '') {
+            //@TODO сделать выброс ошибки
+            return null;
+        }
+
+        $data['serv'] = 'выдача';
+
+        if ($order->params['shipping_rate_id'] == 'courier') {
+            $data['serv'] = 'курьерская доставка';
+        }
+
+        if ($order->params['shipping_rate_id'] == 'post') {
+            $data['serv'] = 'почта';
+        }
+
+        $data['pvz_id'] = $order->shipping_rate_id;
+        $data['login'] = $this->ApiLogin;
+        $data['token'] = $this->ApiToken;
+        $data['method'] = $this->MethodDelivery;
+        $data['punkt_id'] = 'Moskovskaya-A16';
+        $data['pickup_id'] = $this->prefixId . $order->id;
+        $data['pickup_city'] = $this->cityFrom;
+        $data['pickup_date'] = date('H:i');
+        $data['pickup_interval'] = '10-18';
+        $data['pickup_address'] = $this->pickupAddress;
+        $data['pvz_id'] = $order->shipping_rate_id;
+        $data['sku'] = $this->prefixId . $order->id;
+        $data['price'] = $order->total;
+        $data['insurance_val'] = $order->subtotal;
+        $data['buyer_phone'] = ifempty($order->shipping_address['phone'], $order->getContactField('phone'));
+        $data['buyer_fio'] = ifempty($order->shipping_address['firstname'], $order->getContactField('firstname'));
+        $data['buyer_email'] = ifempty($order->shipping_address['email'], $order->getContactField('email'));
+
+        foreach ($order->items as $k => $v) {
+            $data['parts'][$k] = array(
+                'name' => $v['name'],
+                'price' => $v['price'], // Сумма к получению за единицу товара
+                'insurance_val' => $v['price'], // Оценочная (страховая) стоимость единицы товара
+                'num' => $v['quantity'], // Количество позиций товара (по-умолчанию 1)
+                'weight' => ($v['weight'] == 0 ? 1 : $v['weight'])
+            );
+            $data['weight'] +=  (int)($v['weight'] == 0 ? 1 : $v['weight']);
+        }
+
+        //file_put_contents('index.txt', $order->params['shipping_rate_id'], FILE_APPEND);
+        $result = $this->addToLkGlavpunkt($data);
+
+        return null;//$result;
+    }
+
+    /**
+     * Set package state into waShipping::STATE_CANCELED
+     * Вызывается при возврате заказа
+     * @param waOrder $order
+     * @param array   $shipping_data
+     * @return null|string|string[] null, error or shipping data array
+     */
+    protected function cancelPackage(waOrder $order, $shipping_data = array())
+    {
+        //file_put_contents('index.txt', $order->shipping_data['order_id'], FILE_APPEND);
+        //file_put_contents('index.txt', serialize($order), FILE_APPEND);
+        //var_dump('cancelPackage');
+        return null;
+    }
+
+    /**
      * Выполнение запроса
      * 
      * @param string $url 
@@ -277,7 +368,7 @@ class gpshippingShipping extends waShipping
         $res = json_decode($out, true);
 
         if (is_null($res)) {
-            throw new Exception("Неверный JSON ответ: " . $out);
+            throw new Exception('Неверный JSON ответ: ' . $out);
         }
 
         return $res;
@@ -339,9 +430,9 @@ class gpshippingShipping extends waShipping
      */
     private function printDescriptionForOneDay($num)
     {
-        return "$num " . ($num >= 5
-                ? "дней"
-                : ($num > 1 ? "дня" : "день")
+        return "$num "  . ($num >= 5
+                ? 'дней'
+                : ($num > 1 ? 'дня' : 'день')
             );
     }
 
@@ -374,5 +465,54 @@ class gpshippingShipping extends waShipping
         }
 
         return $cost;
+    }
+
+    /**
+     * Собирает параметры для выгрузи в ЛК Главпункт и отправляет
+     *
+     * @param array $data
+     * @return array
+     */
+    private function addToLkGlavpunkt($data)
+    {
+        $data1 = array(
+            'login' => $data['login'], // логин интернет-магазина
+            'token' => $data['token'], // token для авторизации
+            'shipment_options' => array(
+                'skip_existed ' => 1, // Если какой-либо из заказов уже создан, то пропустить его.
+                // В противном случае ни один из заказов в запросе не будет создан.
+                'method' => $data['method'], // Метод отгрузки self_delivery - самопривоз, или pickup - забор.
+                'punkt_id' => 'Moskovskaya-A16', // Пункт отгрузки, если метод отгрузки self_delivery
+                'pickup_id' => $data['pickup_id'], // Номер заявки на забор, если метод отгрузки pickup
+
+                // Следующие параметры передавайте, только если нужно создать новый забор (т.е. нужен забор, но у вас еще нет pickup_id)
+                'pickup_city' => $data['pickup_city'], // Кладр города (или 'SPB' или 'Санкт-Петербург').
+                'pickup_date' => $data['pickup_date'], // Дата забора в формате 'Y-m-d'. Должна быть не раньше завтрашнего дня
+                'pickup_interval' => $data['pickup_interval'], // Интервал забора
+                'pickup_address' => $data['pickup_address']
+                ),
+            'orders' => array(
+                // Заказ на выдачу в ПВЗ
+                array(
+                    'serv' => $data['serv'],
+                    'pvz_id' => $data['pvz_id'],
+                    'sku' => $data['sku'],
+                    'price' => $data['price'], // Сумма к получению. Если передан 0, значит заказ предоплачен.
+                    'buyer_phone' => $data['buyer_phone'],
+                    'buyer_fio' => $data['buyer_fio'],
+                    'buyer_email' => $data['buyer_email'],
+                    'insurance_val' => $data['insurance_val'], // Оценочная (страховая) стоимость заказа
+                    'weight' => $data['weight'], // Общий вес заказа в кг.
+                    'parts' => $data['parts']
+                    )
+                ),
+            );
+
+        $url = 'https://glavpunkt.ru/api/create_shipment';
+
+        $result = $this->request($url, $data1);
+        file_put_contents('index.txt', $result, FILE_APPEND);
+
+        return $result;
     }
 }

@@ -26,6 +26,36 @@ return array(
             'courier' => 'Курьерская доставка',
         ),
     ),
+    'prefixId' => array(
+        'title' => 'Префикс для номера заказа в ЛК',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'pickupAddress' => array(
+        'title' => 'Адрес для забора',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'ApiLogin' => array(
+        'title' => 'Логин ЛК',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'ApiToken' => array(
+        'title' => 'Токен ЛК',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'MethodDelivery' => array(
+        'title' => 'Выебите способ передачи товара в Главпункт',
+        'control_type' => waHtmlControl::SELECT,
+        'options' => array(
+            array('value' => 'self_delivery',
+                'title' => 'Самопривоз',),
+            array('value' => 'pickup',
+                'title' => 'Забор',),
+        ),
+    ),
     'weightDefault' => array(
         'title' => 'Вес по умолчанию (кг)',
         'control_type' => waHtmlControl::INPUT,
