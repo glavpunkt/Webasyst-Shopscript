@@ -303,9 +303,6 @@ class gpshippingShipping extends waShipping
                 break;
         }
 
-        $data['orders'][0]['parts'] = $this->createParts($order);
-        $data['shipment_options'] = $this->createShipmentOptions($order->id);
-
         $this->createShipment($data);
 
         return true; //@TODO сделать верный возврат значений
@@ -342,6 +339,7 @@ class gpshippingShipping extends waShipping
         return array(
             'login' => $this->apiLogin, // логин интернет-магазина
             'token' => $this->apiToken, // token для авторизации
+            'shipment_options' => $this->createShipmentOptions($order->id),
             'orders' => array(
                 // Заказ на выдачу в ПВЗ
                 array(
@@ -355,13 +353,14 @@ class gpshippingShipping extends waShipping
                     'buyer_email' => ifempty($order->shipping_address['email'], $order->getContactField('email')),
                     'insurance_val' => $order->subtotal, // Оценочная (страховая) стоимость заказа
                     'weight' => $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight(),// Общий вес заказа в кг.
+                    'parts' => $this->createParts($order)
                 )
             ),
         );
     }
 
     /**
-     * Метод создания блока с номенлатурой
+     * Метод создания блока shipment_options
      *
      * @param $id
      * @return array
