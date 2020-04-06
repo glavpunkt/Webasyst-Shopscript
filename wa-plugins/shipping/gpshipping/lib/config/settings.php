@@ -10,10 +10,8 @@ return array(
         'title' => 'Укажите город отправки',
         'control_type' => waHtmlControl::SELECT,
         'options' => array(
-            array('value' => 'Санкт-Петербург',
-                'title' => 'Санкт-Петербург'),
-            array('value' => 'Москва',
-                'title' => 'Москва')
+            array('value' => 'Санкт-Петербург', 'title' => 'Санкт-Петербург'),
+            array('value' => 'Москва', 'title' => 'Москва')
         ),
         'value' => 'Санкт-Петербург',
     ),
@@ -50,10 +48,8 @@ return array(
         'title' => 'Выберите способ передачи товара в Главпункт',
         'control_type' => waHtmlControl::SELECT,
         'options' => array(
-            array('value' => 'self_delivery',
-                'title' => 'Отгрузка в пункт выдачи'),
-            array('value' => 'pickup',
-                'title' => 'Забор')
+            array('value' => 'self_delivery', 'title' => 'Отгрузка в пункт выдачи'),
+            array('value' => 'pickup', 'title' => 'Забор')
         ),
     ),
     'weightDefault' => array(
