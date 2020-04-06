@@ -346,7 +346,7 @@ class gpshippingShipping extends waShipping
                     'serv' => 'выдача',
                     'pvz_id' => $order->shipping_rate_id,
                     'sku' => $this->prefixId . $order->id,
-                    'price' => $order->total, //@TODO найти флаг что заказ оплачен и ставить ноль
+                    'price' => is_null($order->paid_datetime) ? $order->total : 0,
                     'buyer_phone' => ifempty($order->shipping_address['phone'], $order->getContactField('phone')),
                     'buyer_fio' => ifempty($order->shipping_address['lastname'], $order->getContactField('lastname'))
                         . ' ' . ifempty($order->shipping_address['firstname'], $order->getContactField('firstname')),
@@ -362,24 +362,34 @@ class gpshippingShipping extends waShipping
     /**
      * Метод создания блока shipment_options
      *
-     * @param $id
+     * @param string $shippingMethod
      * @return array
      */
-    private function createShipmentOptions($orderId)
+    private function createShipmentOptions($shippingMethod = 'pickup')
     {
-        return array(
-            'skip_existed ' => 1, // Если какой-либо из заказов уже создан, то пропустить его.
-            // В противном случае ни один из заказов в запросе не будет создан.
-            'method' => $this->methodDelivery, // Метод отгрузки self_delivery - самопривоз, или pickup - забор.
-            'punkt_id' => 'Moskovskaya-A16', // Пункт отгрузки, если метод отгрузки self_delivery
-            'pickup_id' => $this->prefixId . $orderId, // Номер заявки на забор, если метод отгрузки pickup
+        switch ($this->methodDelivery) {
+            case 'self_delivery':
+                return array(
+                    'method' => $this->methodDelivery,
+                    'punkt_id' => 'Moskovskaya-A16'
+                );
+                break;
+            case 'pickup':
+                return array(
+                    // В противном случае ни один из заказов в запросе не будет создан.
+                    'method' => $this->methodDelivery, // Метод отгрузки self_delivery - самопривоз, или pickup - забор.
+                    'punkt_id' => 'Moskovskaya-A16', // Пункт отгрузки, если метод отгрузки self_delivery
 
-            // Следующие параметры передавайте, только если нужно создать новый забор (т.е. нужен забор, но у вас еще нет pickup_id)
-            'pickup_city' => $this->cityFrom, // Кладр города (или 'SPB' или 'Санкт-Петербург').
-            'pickup_date' => date('H:i'), // Дата забора в формате 'Y-m-d'. Должна быть не раньше завтрашнего дня
-            'pickup_interval' => '10-18', // Интервал забора
-            'pickup_address' => $this->pickupAddress
-        );
+                    // Следующие параметры передавайте, только если нужно создать новый забор (т.е. нужен забор, но у вас еще нет pickup_id)
+                    'pickup_city' => $this->cityFrom, // Кладр города (или 'SPB' или 'Санкт-Петербург').
+                    'pickup_date' => date('H:i'), // Дата забора в формате 'Y-m-d'. Должна быть не раньше завтрашнего дня
+                    'pickup_interval' => '10-18', // Интервал забора
+                    'pickup_address' => $this->pickupAddress
+                );
+                break;
+        }
+
+
     }
 
     /**
