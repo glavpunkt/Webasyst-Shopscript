@@ -11,9 +11,9 @@ return array(
         'control_type' => waHtmlControl::SELECT,
         'options' => array(
             array('value' => 'Санкт-Петербург',
-                'title' => 'Санкт-Петербург',),
+                'title' => 'Санкт-Петербург'),
             array('value' => 'Москва',
-                'title' => 'Москва',),
+                'title' => 'Москва')
         ),
         'value' => 'Санкт-Петербург',
     ),
@@ -23,8 +23,8 @@ return array(
         'options' => array(
             'pickup' => 'Пункты самовывоза',
             'post' => 'Доставка Почтой РФ',
-            'courier' => 'Курьерская доставка',
-        ),
+            'courier' => 'Курьерская доставка'
+        )
     ),
     'prefixId' => array(
         'title' => 'Префикс для номера заказа в ЛК',
@@ -47,13 +47,13 @@ return array(
         'value'        => '',
     ),
     'methodDelivery' => array(
-        'title' => 'Выебите способ передачи товара в Главпункт',
+        'title' => 'Выберите способ передачи товара в Главпункт',
         'control_type' => waHtmlControl::SELECT,
         'options' => array(
             array('value' => 'self_delivery',
-                'title' => 'Отгрузка в пункт выдачи',),
+                'title' => 'Отгрузка в пункт выдачи'),
             array('value' => 'pickup',
-                'title' => 'Забор',),
+                'title' => 'Забор')
         ),
     ),
     'weightDefault' => array(
