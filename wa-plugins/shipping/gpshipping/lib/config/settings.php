@@ -10,10 +10,8 @@ return array(
         'title' => 'Укажите город отправки',
         'control_type' => waHtmlControl::SELECT,
         'options' => array(
-            array('value' => 'Санкт-Петербург',
-                'title' => 'Санкт-Петербург',),
-            array('value' => 'Москва',
-                'title' => 'Москва',),
+            array('value' => 'Санкт-Петербург', 'title' => 'Санкт-Петербург'),
+            array('value' => 'Москва', 'title' => 'Москва')
         ),
         'value' => 'Санкт-Петербург',
     ),
@@ -23,7 +21,35 @@ return array(
         'options' => array(
             'pickup' => 'Пункты самовывоза',
             'post' => 'Доставка Почтой РФ',
-            'courier' => 'Курьерская доставка',
+            'courier' => 'Курьерская доставка'
+        )
+    ),
+    'prefixId' => array(
+        'title' => 'Префикс для номера заказа в ЛК',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'pickupAddress' => array(
+        'title' => 'Адрес для забора',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'apiLogin' => array(
+        'title' => 'Логин ЛК',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'apiToken' => array(
+        'title' => 'Токен ЛК',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'methodDelivery' => array(
+        'title' => 'Выберите способ передачи товара в Главпункт',
+        'control_type' => waHtmlControl::SELECT,
+        'options' => array(
+            array('value' => 'self_delivery', 'title' => 'Отгрузка в пункт выдачи'),
+            array('value' => 'pickup', 'title' => 'Забор')
         ),
     ),
     'weightDefault' => array(
