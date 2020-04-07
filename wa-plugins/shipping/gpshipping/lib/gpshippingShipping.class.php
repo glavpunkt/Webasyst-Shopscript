@@ -370,8 +370,7 @@ class gpshippingShipping extends waShipping
         switch ($this->methodDelivery) {
             case 'self_delivery':
                 return array(
-                    'method' => $this->methodDelivery,
-                    'punkt_id' => 'Moskovskaya-A16'
+                    'method' => $this->methodDelivery
                 );
                 break;
             case 'pickup':
