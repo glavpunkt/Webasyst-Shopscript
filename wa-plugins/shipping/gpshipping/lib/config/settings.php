@@ -100,9 +100,10 @@ return array(
         'value'        => '',
     ),
     'markupPickupCommon' => array(
-        'title' => 'Наценка на выдачу для остальных городов',
+        'title' => 'Наценка на выдачу для всех городов',
         'control_type' => waHtmlControl::INPUT,
         'value'        => '',
+        'description' => 'Для МСК и СПБ если они не заданы',
     ),
     'markupTodoorSPB' => array(
         'title' => 'Наценка для курьерской доставки в СПб',
@@ -115,9 +116,10 @@ return array(
         'value'        => '',
     ),
     'markupTodoorCommon' => array(
-        'title' => 'Наценка для курьерской доставки для остальных городов',
+        'title' => 'Наценка для курьерской доставки для всех городов',
         'control_type' => waHtmlControl::INPUT,
         'value'        => '',
+        'description' => 'Для МСК и СПБ если они не заданы',
     ),
     'markupPost' => array(
         'title' => 'Наценка для доставки почтой',

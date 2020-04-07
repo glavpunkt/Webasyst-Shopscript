@@ -221,7 +221,7 @@ class gpshippingShipping extends waShipping
                 return null;
             }
 
-            $cost = $tarif['tarifTotal'];
+            $cost = $this->countFinalTarif($tarif['tarifTotal'], 'post');
             $estDelivery = $this->periodDelivery($tarif['period'], '0');
         }
 
@@ -229,7 +229,7 @@ class gpshippingShipping extends waShipping
                 'name' => 'Почта РФ', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                 'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
                 'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => $this->countFinalTarif($cost, 'post'), //точная стоимость доставки
+                'rate' => $cost, //точная стоимость доставки
                 'type' => waShipping::TYPE_POST, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                 'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
@@ -264,7 +264,7 @@ class gpshippingShipping extends waShipping
 
         $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
 
-        $tarif['tarif'] = $this->checkCostShipping($tarif['tarif']);
+        //$tarif['tarif'] = $this->checkCostShipping($tarif['tarif']);
 
         return $todoor = array(
                 'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
@@ -511,37 +511,6 @@ class gpshippingShipping extends waShipping
     }
 
     /**
-     * Проверяет параметы доставки и возвращает либо false либо стоимоть доставки
-     *
-     * @param string $cost
-     * @return string
-     */
-    private function checkCostShipping($cost)
-    {
-        if ($this->getAddress('city') == 'Санкт-Петербург') {
-            if ($this->fixedShippingSPB !== '') {
-                $cost = $this->fixedShippingSPB;
-            }
-
-            if ($this->freeShippingSPB !== '' && (int)$this->freeShippingSPB < (int)$this->getTotalPrice()) {
-                $cost = '0';
-            }
-        }
-
-        if ($this->getAddress('city') == 'Москва') {
-            if ($this->fixedShippingMSK !== '') {
-                $cost = $this->fixedShippingMSK;
-            }
-
-            if ($this->freeShippingMSK !== '' && (int)$this->freeShippingMSK < (int)$this->getTotalPrice()) {
-                $cost = '0';
-            }
-        }
-
-        return $cost;
-    }
-
-    /**
      * Собирает параметры для выгрузи в ЛК Главпункт и отправляет
      *
      * @param array $data
@@ -569,32 +538,74 @@ class gpshippingShipping extends waShipping
     {
         $finalTarif = (int)$tarif;
 
-        if ($typeDelivery == 'post') {
-            $finalTarif = (int)$tarif + (int)$this->markupPost;
-        }
+        switch ($typeDelivery) {
+            case 'post':
+                $finalTarif = (int)$tarif + (int)$this->markupPost;
+                break;
+            case 'todoor':
+                $finalTarif = (int)$tarif + (int)$this->markupTodoorCommon;
 
-        if ($typeDelivery == 'todoor') {
-            $finalTarif = (int)$tarif + (int)$this->markupTodoorCommon;
+                if ($this->getAddress('city') == 'Санкт-Петербург') {
+                    if ($this->fixedShippingSPB == '') {
+                        $finalTarif = (int)$tarif + (int)$this->markupTodoorSPB;
+                    } else {
+                        if ($this->fixedShippingSPB !== '') {
+                            $finalTarif = $this->fixedShippingSPB;
+                        }
 
-            if ($this->getAddress('city') == 'Санкт-Петербург') {
-                $finalTarif = (int)$tarif + (int)$this->markupTodoorSPB;
-            }
+                        if ($this->freeShippingSPB !== '' && (int)$this->freeShippingSPB < (int)$this->getTotalPrice()) {
+                            $finalTarif = '0';
+                        }
+                    }
+                }
 
-            if ($this->getAddress('city') == 'Москва') {
-                $finalTarif = (int)$tarif + (int)$this->markupTodoorSPB;
-            }
-        }
+                if ($this->getAddress('city') == 'Москва') {
+                    if ($this->fixedShippingMSK == '') {
+                        $finalTarif = (int)$tarif + (int)$this->markupTodoorMSK;
+                    } else {
+                        if ($this->fixedShippingMSK !== '') {
+                            $finalTarif = $this->fixedShippingMSK;
+                        }
 
-        if ($typeDelivery == 'pickup') {
-            $finalTarif = (int)$tarif + (int)$this->markupPickupCommon;
+                        if ($this->freeShippingMSK !== '' && (int)$this->freeShippingMSK < (int)$this->getTotalPrice()) {
+                            $finalTarif = '0';
+                        }
+                    }
+                }
 
-            if ($this->getAddress('city') == 'Санкт-Петербург') {
-                $finalTarif = (int)$tarif + (int)$this->markupPickupSPB;
-            }
+                break;
+            case 'pickup':
+                $finalTarif = (int)$tarif + (int)$this->markupPickupCommon;
 
-            if ($this->getAddress('city') == 'Москва') {
-                $finalTarif = (int)$tarif + (int)$this->markupPickupMSK;
-            }
+                if ($this->getAddress('city') == 'Санкт-Петербург') {
+                    if ($this->fixedShippingSPB == '') {
+                        $finalTarif = (int)$tarif + (int)$this->markupPickupSPB;
+                    } else {
+                        if ($this->fixedShippingSPB !== '') {
+                            $finalTarif = $this->fixedShippingSPB;
+                        }
+
+                        if ($this->freeShippingSPB !== '' && (int)$this->freeShippingSPB < (int)$this->getTotalPrice()) {
+                            $finalTarif = '0';
+                        }
+                    }
+                }
+
+                if ($this->getAddress('city') == 'Москва') {
+                    if ($this->fixedShippingMSK == '') {
+                        $finalTarif = (int)$tarif + (int)$this->markupPickupMSK;
+                    } else {
+                        if ($this->fixedShippingMSK !== '') {
+                            $finalTarif = $this->fixedShippingMSK;
+                        }
+
+                        if ($this->freeShippingMSK !== '' && (int)$this->freeShippingMSK < (int)$this->getTotalPrice()) {
+                            $finalTarif = '0';
+                        }
+                    }
+                }
+
+                break;
         }
 
         return $finalTarif;
