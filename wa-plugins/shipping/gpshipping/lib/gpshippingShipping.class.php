@@ -370,14 +370,14 @@ class gpshippingShipping extends waShipping
         switch ($this->methodDelivery) {
             case 'self_delivery':
                 return array(
-                    'method' => $this->methodDelivery
+                    'method' => $this->methodDelivery,
+                    'punkt_id' => 'Moskovskaya-A16'
                 );
                 break;
             case 'pickup':
                 return array(
                     // В противном случае ни один из заказов в запросе не будет создан.
                     'method' => $this->methodDelivery, // Метод отгрузки self_delivery - самопривоз, или pickup - забор.
-                    'punkt_id' => 'Moskovskaya-A16', // Пункт отгрузки, если метод отгрузки self_delivery
 
                     // Следующие параметры передавайте, только если нужно создать новый забор (т.е. нужен забор, но у вас еще нет pickup_id)
                     'pickup_city' => $this->cityFrom, // Кладр города (или 'SPB' или 'Санкт-Петербург').
