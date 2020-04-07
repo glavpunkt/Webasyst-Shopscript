@@ -89,4 +89,39 @@ return array(
         'control_type' => waHtmlControl::INPUT,
         'value'        => '',
     ),
+    'markupPickupSPB' => array(
+        'title' => 'Наценка на выдачу в СПб',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'markupPickupMSK' => array(
+        'title' => 'Наценка на выдачу в МСК',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'markupPickupCommon' => array(
+        'title' => 'Наценка на выдачу для остальных городов',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'markupTodoorSPB' => array(
+        'title' => 'Наценка для курьерской доставки в СПб',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'markupTodoorMSK' => array(
+        'title' => 'Наценка для курьерской доставки в МСК',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'markupTodoorCommon' => array(
+        'title' => 'Наценка для курьерской доставки для остальных городов',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
+    'markupPost' => array(
+        'title' => 'Наценка для доставки почтой',
+        'control_type' => waHtmlControl::INPUT,
+        'value'        => '',
+    ),
 );

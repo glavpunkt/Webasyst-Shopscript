@@ -162,7 +162,7 @@ class gpshippingShipping extends waShipping
                     'name' => 'Пункт выдачи ' . (isset($v['metro']) ? $v['metro'] : $v['address']), //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                     'est_delivery' => $this->periodDelivery($v['delivery_period'], '0'), //произвольная строка, содержащая  информацию о примерном времени доставки
                     'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                    'rate' => $v['tarif'], //точная стоимость доставки
+                    'rate' => $this->countFinalTarif($v['tarif'], 'pickup'), //точная стоимость доставки
                     'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                     'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
                     'custom_data' => array(
@@ -229,7 +229,7 @@ class gpshippingShipping extends waShipping
                 'name' => 'Почта РФ', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                 'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
                 'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => $cost, //точная стоимость доставки
+                'rate' => $this->countFinalTarif($cost, 'post'), //точная стоимость доставки
                 'type' => waShipping::TYPE_POST, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                 'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
@@ -270,7 +270,7 @@ class gpshippingShipping extends waShipping
                 'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                 'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
                 'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => $tarif['tarif'], //точная стоимость доставки
+                'rate' => $this->countFinalTarif($tarif['tarif'], 'todoor'), //точная стоимость доставки
                 'type' => waShipping::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                 'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
@@ -555,5 +555,48 @@ class gpshippingShipping extends waShipping
         $result = $this->request($url, $data);
 
         return $result;
+    }
+
+    /**
+     * Возврщает итоговый тариф доставки
+     *
+     * @param string $tarif
+     * @param string $typeDelivery $this->getAddress('city')
+     * @return integer
+     * @throws Exception
+     */
+    private function countFinalTarif($tarif, $typeDelivery)
+    {
+        $finalTarif = (int)$tarif;
+
+        if ($typeDelivery == 'post') {
+            $finalTarif = (int)$tarif + (int)$this->markupPost;
+        }
+
+        if ($typeDelivery == 'todoor') {
+            $finalTarif = (int)$tarif + (int)$this->markupTodoorCommon;
+
+            if ($this->getAddress('city') == 'Санкт-Петербург') {
+                $finalTarif = (int)$tarif + (int)$this->markupTodoorSPB;
+            }
+
+            if ($this->getAddress('city') == 'Москва') {
+                $finalTarif = (int)$tarif + (int)$this->markupTodoorSPB;
+            }
+        }
+
+        if ($typeDelivery == 'pickup') {
+            $finalTarif = (int)$tarif + (int)$this->markupPickupCommon;
+
+            if ($this->getAddress('city') == 'Санкт-Петербург') {
+                $finalTarif = (int)$tarif + (int)$this->markupPickupSPB;
+            }
+
+            if ($this->getAddress('city') == 'Москва') {
+                $finalTarif = (int)$tarif + (int)$this->markupPickupMSK;
+            }
+        }
+
+        return $finalTarif;
     }
 }
