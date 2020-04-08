@@ -527,7 +527,7 @@ class gpshippingShipping extends waShipping
     }
 
     /**
-     * Возврщает итоговый тариф доставки
+     * Возвращает итоговый тариф доставки
      *
      * @param string $tarif
      * @param string $typeDelivery $this->getAddress('city')
@@ -568,7 +568,7 @@ class gpshippingShipping extends waShipping
     }
 
     /**
-     * Возврщает значение метода для finalTarif()
+     * Применение настроек для тарифа по заданным параметрам фиксированного тарифа, наценки и пр
      *
      * @param float $tarif
      * @param string $freeFrom
