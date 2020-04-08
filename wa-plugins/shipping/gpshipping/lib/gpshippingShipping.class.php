@@ -162,7 +162,7 @@ class gpshippingShipping extends waShipping
                     'name' => 'Пункт выдачи ' . (isset($v['metro']) ? $v['metro'] : $v['address']), //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                     'est_delivery' => $this->periodDelivery($v['delivery_period'], '0'), //произвольная строка, содержащая  информацию о примерном времени доставки
                     'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                    'rate' => $this->countFinalTarif($v['tarif'], 'pickup'), //точная стоимость доставки
+                    'rate' => $this->finalTarif($v['tarif'], 'pickup'), //точная стоимость доставки
                     'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                     'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
                     'custom_data' => array(
@@ -221,7 +221,7 @@ class gpshippingShipping extends waShipping
                 return null;
             }
 
-            $cost = $this->countFinalTarif($tarif['tarifTotal'], 'post');
+            $cost = $this->finalTarif($tarif['tarifTotal'], 'post');
             $estDelivery = $this->periodDelivery($tarif['period'], '0');
         }
 
@@ -270,7 +270,7 @@ class gpshippingShipping extends waShipping
                 'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                 'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
                 'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => $this->countFinalTarif($tarif['tarif'], 'todoor'), //точная стоимость доставки
+                'rate' => $this->finalTarif($tarif['tarif'], 'todoor'), //точная стоимость доставки
                 'type' => waShipping::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                 'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
@@ -534,80 +534,43 @@ class gpshippingShipping extends waShipping
      * @return integer
      * @throws Exception
      */
-    private function countFinalTarif($tarif, $typeDelivery)
+    private function finalTarif($tarif, $typeDelivery)
     {
-        $finalTarif = (int)$tarif;
+        $finalTarif = (float)$tarif;
 
-        switch ($typeDelivery) {
-            case 'post':
-                $finalTarif = (int)$tarif + (int)$this->markupPost;
-                break;
-            case 'todoor':
-                $finalTarif = (int)$tarif + (int)$this->markupTodoorCommon;
+        if ($typeDelivery == 'post') {
+            $finalTarif += (float)$this->markupPost;
+        } else {
+            if ($this->getParam('fixed', 'shipping') == '' && $this->getParam('markup', $typeDelivery) !== '') {
+                $finalTarif += (float)$this->getParam('markup', $typeDelivery);
+            }
 
-                if ($this->getAddress('city') == 'Санкт-Петербург') {
-                    if ($this->fixedShippingSPB == '') {
-                        $finalTarif = (int)$tarif + (int)$this->markupTodoorSPB;
-                    } else {
-                        if ($this->fixedShippingSPB !== '') {
-                            $finalTarif = $this->fixedShippingSPB;
-                        }
+            if ($this->getParam('fixed', 'shipping') !== '') {
+                $finalTarif = (float)$this->getParam('fixed', 'shipping');
+            }
 
-                        if ($this->freeShippingSPB !== '' && (int)$this->freeShippingSPB < (int)$this->getTotalPrice()) {
-                            $finalTarif = '0';
-                        }
-                    }
-                }
-
-                if ($this->getAddress('city') == 'Москва') {
-                    if ($this->fixedShippingMSK == '') {
-                        $finalTarif = (int)$tarif + (int)$this->markupTodoorMSK;
-                    } else {
-                        if ($this->fixedShippingMSK !== '') {
-                            $finalTarif = $this->fixedShippingMSK;
-                        }
-
-                        if ($this->freeShippingMSK !== '' && (int)$this->freeShippingMSK < (int)$this->getTotalPrice()) {
-                            $finalTarif = '0';
-                        }
-                    }
-                }
-
-                break;
-            case 'pickup':
-                $finalTarif = (int)$tarif + (int)$this->markupPickupCommon;
-
-                if ($this->getAddress('city') == 'Санкт-Петербург') {
-                    if ($this->fixedShippingSPB == '') {
-                        $finalTarif = (int)$tarif + (int)$this->markupPickupSPB;
-                    } else {
-                        if ($this->fixedShippingSPB !== '') {
-                            $finalTarif = $this->fixedShippingSPB;
-                        }
-
-                        if ($this->freeShippingSPB !== '' && (int)$this->freeShippingSPB < (int)$this->getTotalPrice()) {
-                            $finalTarif = '0';
-                        }
-                    }
-                }
-
-                if ($this->getAddress('city') == 'Москва') {
-                    if ($this->fixedShippingMSK == '') {
-                        $finalTarif = (int)$tarif + (int)$this->markupPickupMSK;
-                    } else {
-                        if ($this->fixedShippingMSK !== '') {
-                            $finalTarif = $this->fixedShippingMSK;
-                        }
-
-                        if ($this->freeShippingMSK !== '' && (int)$this->freeShippingMSK < (int)$this->getTotalPrice()) {
-                            $finalTarif = '0';
-                        }
-                    }
-                }
-
-                break;
+            if ($this->getParam('free', 'shipping') !== '' && (float)$this->getParam('free', 'shipping') < (float)$this->getTotalPrice()) {
+                $finalTarif = 0;
+            }
         }
 
-        return $finalTarif;
+        return number_format($finalTarif, 2);
+    }
+
+    /**
+     * Возврщает значение метода для finalTarif()
+     *
+     * @param string $typeDelivery
+     * @param string $methodSale
+     * @return string
+     * @throws Exception
+     */
+    private function getParam($methodSale, $typeDelivery) {
+
+        $city = ($this->getAddress('city') == 'Москва' ? 'MSK' : ($this->getAddress('city') == 'Санкт-Петербург' ? 'SPB' : 'Common'));
+        $typeDelivery = ucfirst(strtolower($typeDelivery));
+        $paramName = $methodSale . $typeDelivery . $city;
+
+        return ($this->$paramName == null ? '' : $this->$paramName);
     }
 }
