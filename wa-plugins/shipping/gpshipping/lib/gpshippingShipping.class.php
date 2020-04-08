@@ -538,20 +538,30 @@ class gpshippingShipping extends waShipping
     {
         $finalTarif = (float)$tarif;
 
-        if ($typeDelivery == 'post') {
-            $finalTarif += (float)$this->markupPost;
-        } else {
-            if ($this->getParam('fixed', 'shipping') == '' && $this->getParam('markup', $typeDelivery) !== '') {
-                $finalTarif += (float)$this->getParam('markup', $typeDelivery);
-            }
-
-            if ($this->getParam('fixed', 'shipping') !== '') {
-                $finalTarif = (float)$this->getParam('fixed', 'shipping');
-            }
-
-            if ($this->getParam('free', 'shipping') !== '' && (float)$this->getParam('free', 'shipping') < (float)$this->getTotalPrice()) {
-                $finalTarif = 0;
-            }
+        switch ($typeDelivery) {
+            case 'post':
+                $finalTarif += (float)$this->markupPost;
+                break;
+            case 'todoor':
+                if ($this->getAddress('city') == 'Москва') {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingMSK, $this->fixedShippingMSK, $this->markupTodoorMSK);
+                } elseif ($this->getAddress('city') == 'Санкт-Петербург') {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupTodoorSPB);
+                } else {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupTodoorCommon);
+                }
+                break;
+            case 'pickup':
+                if ($this->getAddress('city') == 'Москва') {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingMSK, $this->fixedShippingMSK, $this->markupPickupMSK);
+                } elseif ($this->getAddress('city') == 'Санкт-Петербург') {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupPickupSPB);
+                } else {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupPickupCommon);
+                }
+                break;
+            default:
+                throw new Exception('Неизвестный тип доставки');
         }
 
         return number_format($finalTarif, 2);
@@ -560,17 +570,20 @@ class gpshippingShipping extends waShipping
     /**
      * Возврщает значение метода для finalTarif()
      *
-     * @param string $typeDelivery
-     * @param string $methodSale
-     * @return string
-     * @throws Exception
+     * @param float $tarif
+     * @param string $freeFrom
+     * @param string $fixedTarif
+     * @param string $markup
+     * @return mixed
      */
-    private function getParam($methodSale, $typeDelivery) {
-
-        $city = ($this->getAddress('city') == 'Москва' ? 'MSK' : ($this->getAddress('city') == 'Санкт-Петербург' ? 'SPB' : 'Common'));
-        $typeDelivery = ucfirst(strtolower($typeDelivery));
-        $paramName = $methodSale . $typeDelivery . $city;
-
-        return ($this->$paramName == null ? '' : $this->$paramName);
+    function correctTarif($tarif, $freeFrom, $fixedTarif, $markup)
+    {
+        if ($freeFrom !== null && $freeFrom != '' && $freeFrom <= $this->getTotalPrice()) {
+            return 0;
+        } elseif ($fixedTarif !== null && $fixedTarif != '') {
+            return $fixedTarif;
+        } else {
+            return $tarif + (float)$markup;
+        }
     }
 }
