@@ -126,4 +126,9 @@ return array(
         'control_type' => waHtmlControl::INPUT,
         'value'        => '',
     ),
+    'customer_interval' => array(
+        'title'        => 'Желаемое время доставки и график работы',
+        'control_type' => 'DeliveryIntervalControl',
+        'minutes'      => false,
+    ),
 );

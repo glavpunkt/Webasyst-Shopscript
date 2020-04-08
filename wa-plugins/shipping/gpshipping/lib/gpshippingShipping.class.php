@@ -79,7 +79,7 @@ class gpshippingShipping extends waShipping
      * @param string $cityTo название города назначения
      * @param string $cityFrom название город отправки из настроек
      * @return array
-     * @throws Exception
+     * @throws waException
      */
     private function punkts($cityTo, $cityFrom)
     {
@@ -147,7 +147,7 @@ class gpshippingShipping extends waShipping
      *
      * @param string $cityTo город назначения
      * @return array
-     * @throws Exception
+     * @throws waException
      */
     private function getArrayPickup($cityTo)
     {
@@ -190,7 +190,7 @@ class gpshippingShipping extends waShipping
      *
      * @param string $cityTo город назначения
      * @return array
-     * @throws Exception
+     * @throws waException
      */
     private function getArrayPost($cityTo)
     {
@@ -240,7 +240,7 @@ class gpshippingShipping extends waShipping
      *
      * @param string $cityTo город назначения
      * @return array
-     * @throws Exception
+     * @throws waException
      */
     private function getArrayTodoor($cityTo)
     {
@@ -264,8 +264,6 @@ class gpshippingShipping extends waShipping
 
         $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
 
-        //$tarif['tarif'] = $this->checkCostShipping($tarif['tarif']);
-
         return $todoor = array(
                 'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                 'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
@@ -282,40 +280,72 @@ class gpshippingShipping extends waShipping
      * @param waOrder $order
      * @param array $shipping_data
      * @return null|string|string[] null, error or shipping data array
-     * @throws Exception
+     * @throws waException
      */
     protected function readyPackage(waOrder $order, $shipping_data = array())
     {
-        if ($this->apiLogin == '' || $this->apiToken == '') {
-            //@TODO сделать выброс ошибки
-            return null;
+        try {
+
+            if ($this->apiLogin !== '' || !$this->apiToken == '') {
+                throw new waException('Апи или токен не установлены');
+            }
+
+            switch ($order->params['shipping_rate_id']) {
+                case 'courier':
+                    $data = $this->courierRequestArrey($order);
+                    break;
+                case 'post':
+                    $data = $this->postRequestArrey($order);
+                    break;
+                default:
+                    $data = $this->pickupRequestArrey($order);
+                    break;
+            }
+
+            return $this->createShipment($data);
+
+        } catch (waException $ex) {
+
+            return $ex->getMessage();
         }
-
-        switch ($order->params['shipping_rate_id']) {
-            case 'courier':
-                $data = $this->courierRequestArrey($order);
-                break;
-            case 'post':
-                $data = $this->postRequestArrey($order);
-                break;
-            default:
-                $data = $this->pickupRequestArrey($order);
-                break;
-        }
-
-        $this->createShipment($data);
-
-        return true; //@TODO сделать верный возврат значений
     }
 
     /**
      * Собирает массив с данными для выгрузки заказа курьерской доставкой
      *
      * @param waOrder $order
+     * @return array
      */
     private function courierRequestArrey(waOrder $order)
     {
-
+        $deliveresTime = explode('-',$order->shipping_params['desired_delivery.interval']);
+        return array(
+            'login' => $this->apiLogin, // логин интернет-магазина
+            'token' => $this->apiToken, // token для авторизации
+            'shipment_options' => $this->createShipmentOptions($order->id),
+            'orders' => array(
+                array(
+                    'serv' => 'курьерская доставка',
+                    'barcode' => $order->items['sku'],
+                    'sku' => $this->prefixId . $order->id,
+                    'price' => is_null($order->paid_datetime) ? $order->total : 0,
+                    'buyer_phone' => ifempty($order->shipping_address['phone'], $order->getContactField('phone')),
+                    'buyer_fio' => ifempty($order->shipping_address['lastname'], $order->getContactField('lastname'))
+                        . ' ' . ifempty($order->shipping_address['firstname'], $order->getContactField('firstname')),
+                    'buyer_email' => ifempty($order->shipping_address['email'], $order->getContactField('email')),
+                    'insurance_val' => $order->subtotal, // Оценочная (страховая) стоимость заказа
+                    'weight' => $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight(),// Общий вес заказа в кг.
+                    "delivery" => array( // Параметры курьерской доставки
+                        "city" => $this->getAddress('city'), // Кладр города (или "SPB" или "Санкт-Петербург").
+                        "address" => $this->getAddress('street'),
+                        "date" => $order->shipping_params['desired_delivery.date'],
+                        "time_from" => $deliveresTime[0],
+                        "time_to" => $deliveresTime[1]
+                    ),
+                    'parts' => $this->createParts($order)
+                )
+            ),
+        );
     }
 
     /**
@@ -387,8 +417,6 @@ class gpshippingShipping extends waShipping
                 );
                 break;
         }
-
-
     }
 
     /**
@@ -424,7 +452,7 @@ class gpshippingShipping extends waShipping
      * @param string $url 
      * @param array $data массив параметров для передачи POST запросом
      * @return array
-     * @throws Exception
+     * @throws waException
      */
     private function request($url, $data = null)
     {
@@ -442,7 +470,7 @@ class gpshippingShipping extends waShipping
         $res = json_decode($out, true);
 
         if (is_null($res)) {
-            throw new Exception('Неверный JSON ответ: ' . $out);
+            throw new waException('Неверный JSON ответ: ' . $out);
         }
 
         return $res;
@@ -459,8 +487,8 @@ class gpshippingShipping extends waShipping
         if ($service['type'] == 'todoor') {
 
             return array(
-                'street' => array('required' => true),
-                'city' => array('required' => true)
+                    'street' => array('required' => true),
+                    'city' => array('required' => true)
             );
         } elseif ($service['type'] == 'post') {
 
@@ -468,6 +496,57 @@ class gpshippingShipping extends waShipping
                 'zip' => array('cost' => true, 'required' => true)
             );
         }
+    }
+
+    /**
+     * Создание дополнительного поля
+     *
+     * @param waOrder $order
+     * @param array $service
+     * @return array
+     */
+    public function customFieldsForService(waOrder $order, $service)
+    {
+        if ($service['type'] == 'todoor') {
+            $fields = parent::customFieldsForService($order, $service);
+
+            $setting = $this->getSettings('customer_interval');
+
+            if (!empty($setting['interval']) || !empty($setting['date'])) {
+                if (!strlen($this->delivery_time)) {
+                    $from = time();
+                } else {
+                    $from = strtotime(preg_replace('@,.+$@', '', $this->delivery_time));
+                }
+                $offset = max(0, ceil(($from - time()) / (24 * 3600)));
+                $shipping_params = $order->shipping_params;
+                $value = array();
+
+                if (!empty($shipping_params['desired_delivery.interval'])) {
+                    $value['interval'] = $shipping_params['desired_delivery.interval'];
+                }
+                if (!empty($shipping_params['desired_delivery.date_str'])) {
+                    $value['date_str'] = $shipping_params['desired_delivery.date_str'];
+                }
+                if (!empty($shipping_params['desired_delivery.date'])) {
+                    $value['date'] = $shipping_params['desired_delivery.date'];
+                }
+
+                $fields['desired_delivery'] = array(
+                    'value'        => $value,
+                    'title'        => 'Желаемае дата доставки',
+                    'control_type' => waHtmlControl::DATETIME,
+                    'params'       => array(
+                        'date'      => empty($setting['date']) ? null : ifempty($offset, 0),
+                        'interval'  => ifset($setting['interval']),
+                        'intervals' => ifset($setting['intervals']),
+                    ),
+                );
+            }
+
+            return $fields;
+        }
+        return array();
     }
 
     /**
@@ -514,16 +593,22 @@ class gpshippingShipping extends waShipping
      * Собирает параметры для выгрузи в ЛК Главпункт и отправляет
      *
      * @param array $data
-     * @return array
-     * @throws Exception
+     * @return string
+     * @throws waException
      */
     private function createShipment($data)
     {
         $url = 'https://glavpunkt.ru/api/create_shipment';
 
-        $result = $this->request($url, $data);
+        $answer = $this->request($url, $data);
 
-        return $result;
+        if ($answer['result'] == 'error') {
+
+            return $answer['message'];
+        } else {
+
+            return 'номер созданной поставки (накладной)' .  $answer['docnum'];
+        }
     }
 
     /**
@@ -532,7 +617,7 @@ class gpshippingShipping extends waShipping
      * @param string $tarif
      * @param string $typeDelivery $this->getAddress('city')
      * @return integer
-     * @throws Exception
+     * @throws waException
      */
     private function finalTarif($tarif, $typeDelivery)
     {
@@ -561,7 +646,7 @@ class gpshippingShipping extends waShipping
                 }
                 break;
             default:
-                throw new Exception('Неизвестный тип доставки');
+                throw new waException('Неизвестный тип доставки');
         }
 
         return number_format($finalTarif, 2);
