@@ -162,7 +162,7 @@ class gpshippingShipping extends waShipping
                     'name' => 'Пункт выдачи ' . (isset($v['metro']) ? $v['metro'] : $v['address']), //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                     'est_delivery' => $this->periodDelivery($v['delivery_period'], '0'), //произвольная строка, содержащая  информацию о примерном времени доставки
                     'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                    'rate' => $v['tarif'], //точная стоимость доставки
+                    'rate' => $this->finalTarif($v['tarif'], 'pickup'), //точная стоимость доставки
                     'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                     'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
                     'custom_data' => array(
@@ -221,7 +221,7 @@ class gpshippingShipping extends waShipping
                 return null;
             }
 
-            $cost = $tarif['tarifTotal'];
+            $cost = $this->finalTarif($tarif['tarifTotal'], 'post');
             $estDelivery = $this->periodDelivery($tarif['period'], '0');
         }
 
@@ -264,13 +264,13 @@ class gpshippingShipping extends waShipping
 
         $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
 
-        $tarif['tarif'] = $this->checkCostShipping($tarif['tarif']);
+        //$tarif['tarif'] = $this->checkCostShipping($tarif['tarif']);
 
         return $todoor = array(
                 'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
                 'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
                 'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => $tarif['tarif'], //точная стоимость доставки
+                'rate' => $this->finalTarif($tarif['tarif'], 'todoor'), //точная стоимость доставки
                 'type' => waShipping::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
                 'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
@@ -511,37 +511,6 @@ class gpshippingShipping extends waShipping
     }
 
     /**
-     * Проверяет параметы доставки и возвращает либо false либо стоимоть доставки
-     *
-     * @param string $cost
-     * @return string
-     */
-    private function checkCostShipping($cost)
-    {
-        if ($this->getAddress('city') == 'Санкт-Петербург') {
-            if ($this->fixedShippingSPB !== '') {
-                $cost = $this->fixedShippingSPB;
-            }
-
-            if ($this->freeShippingSPB !== '' && (int)$this->freeShippingSPB < (int)$this->getTotalPrice()) {
-                $cost = '0';
-            }
-        }
-
-        if ($this->getAddress('city') == 'Москва') {
-            if ($this->fixedShippingMSK !== '') {
-                $cost = $this->fixedShippingMSK;
-            }
-
-            if ($this->freeShippingMSK !== '' && (int)$this->freeShippingMSK < (int)$this->getTotalPrice()) {
-                $cost = '0';
-            }
-        }
-
-        return $cost;
-    }
-
-    /**
      * Собирает параметры для выгрузи в ЛК Главпункт и отправляет
      *
      * @param array $data
@@ -555,5 +524,66 @@ class gpshippingShipping extends waShipping
         $result = $this->request($url, $data);
 
         return $result;
+    }
+
+    /**
+     * Возвращает итоговый тариф доставки
+     *
+     * @param string $tarif
+     * @param string $typeDelivery $this->getAddress('city')
+     * @return integer
+     * @throws Exception
+     */
+    private function finalTarif($tarif, $typeDelivery)
+    {
+        $finalTarif = (float)$tarif;
+
+        switch ($typeDelivery) {
+            case 'post':
+                $finalTarif += (float)$this->markupPost;
+                break;
+            case 'todoor':
+                if ($this->getAddress('city') == 'Москва') {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingMSK, $this->fixedShippingMSK, $this->markupTodoorMSK);
+                } elseif ($this->getAddress('city') == 'Санкт-Петербург') {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupTodoorSPB);
+                } else {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupTodoorCommon);
+                }
+                break;
+            case 'pickup':
+                if ($this->getAddress('city') == 'Москва') {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingMSK, $this->fixedShippingMSK, $this->markupPickupMSK);
+                } elseif ($this->getAddress('city') == 'Санкт-Петербург') {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupPickupSPB);
+                } else {
+                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupPickupCommon);
+                }
+                break;
+            default:
+                throw new Exception('Неизвестный тип доставки');
+        }
+
+        return number_format($finalTarif, 2);
+    }
+
+    /**
+     * Применение настроек для тарифа по заданным параметрам фиксированного тарифа, наценки и пр
+     *
+     * @param float $tarif
+     * @param string $freeFrom
+     * @param string $fixedTarif
+     * @param string $markup
+     * @return mixed
+     */
+    function correctTarif($tarif, $freeFrom, $fixedTarif, $markup)
+    {
+        if ($freeFrom !== null && $freeFrom != '' && $freeFrom <= $this->getTotalPrice()) {
+            return 0;
+        } elseif ($fixedTarif !== null && $fixedTarif != '') {
+            return $fixedTarif;
+        } else {
+            return $tarif + (float)$markup;
+        }
     }
 }
