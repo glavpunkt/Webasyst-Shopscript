@@ -302,7 +302,7 @@ class gpshippingShipping extends waShipping
                     break;
             }
 
-            return $this->createShipment($data, $this->prefixId . $order->id);
+            return $this->createShipment($data, $this->sku($order));
         } catch (waException $ex) {
             return "Заказ не был создан в системе Главпункт по причине: " . $ex->getMessage() .
                 ". Необходимо создать данный заказ вручную в ЛК Главпункт.";
@@ -321,12 +321,12 @@ class gpshippingShipping extends waShipping
         return array(
             'login' => $this->apiLogin, // логин интернет-магазина
             'token' => $this->apiToken, // token для авторизации
-            'shipment_options' => $this->createShipmentOptions($order->id),
+            'shipment_options' => $this->createShipmentOptions(),
             'orders' => array(
                 array(
                     'serv' => 'курьерская доставка',
                     'barcode' => $order->items['sku'],
-                    'sku' => $this->prefixId . $order->id,
+                    'sku' => $this->sku($order),
                     'price' => is_null($order->paid_datetime) ? $order->total : 0,
                     'buyer_phone' => ifempty($order->shipping_address['phone'], $order->getContactField('phone')),
                     'buyer_fio' => ifempty($order->shipping_address['lastname'], $order->getContactField('lastname'))
@@ -368,13 +368,13 @@ class gpshippingShipping extends waShipping
         return array(
             'login' => $this->apiLogin, // логин интернет-магазина
             'token' => $this->apiToken, // token для авторизации
-            'shipment_options' => $this->createShipmentOptions($order->id),
+            'shipment_options' => $this->createShipmentOptions(),
             'orders' => array(
                 // Заказ на выдачу в ПВЗ
                 array(
                     'serv' => 'выдача',
                     'pvz_id' => $order->shipping_rate_id,
-                    'sku' => $this->prefixId . $order->id,
+                    'sku' => $this->sku($order),
                     'price' => is_null($order->paid_datetime) ? $order->total : 0,
                     'buyer_phone' => ifempty($order->shipping_address['phone'], $order->getContactField('phone')),
                     'buyer_fio' => ifempty($order->shipping_address['lastname'], $order->getContactField('lastname'))
@@ -391,10 +391,9 @@ class gpshippingShipping extends waShipping
     /**
      * Метод создания блока shipment_options
      *
-     * @param string $shippingMethod
      * @return array
      */
-    private function createShipmentOptions($shippingMethod = 'pickup')
+    private function createShipmentOptions()
     {
         switch ($this->methodDelivery) {
             case 'self_delivery':
@@ -665,7 +664,7 @@ class gpshippingShipping extends waShipping
      * @param string $markup
      * @return mixed
      */
-    function correctTarif($tarif, $freeFrom, $fixedTarif, $markup)
+    private function correctTarif($tarif, $freeFrom, $fixedTarif, $markup)
     {
         if ($freeFrom !== null && $freeFrom != '' && $freeFrom <= $this->getTotalPrice()) {
             return 0;
@@ -674,5 +673,15 @@ class gpshippingShipping extends waShipping
         } else {
             return $tarif + (float)$markup;
         }
+    }
+
+    /**
+     * Возвращает полный sku
+     *
+     * @param waOrder $order
+     * @return string
+     */
+    private function sku(waOrder $order){
+        return $this->prefixId . substr($order->id_str, 1);
     }
 }
