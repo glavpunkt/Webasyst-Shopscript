@@ -304,7 +304,8 @@ class gpshippingShipping extends waShipping
 
             return $this->createShipment($data, $this->prefixId . $order->id);
         } catch (waException $ex) {
-            return $ex->getMessage();
+            return "Заказ не был создан в системе Главпункт по причине: " . $ex->getMessage() .
+                ". Необходимо создать данный заказ вручную в ЛК Главпункт.";
         }
     }
 
