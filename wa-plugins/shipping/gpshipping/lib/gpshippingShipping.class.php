@@ -302,7 +302,7 @@ class gpshippingShipping extends waShipping
                     break;
             }
 
-            return $this->createShipment($data, $this->getSku($order));
+            return $this->createShipment($data, $this->sku($order));
         } catch (waException $ex) {
             return "Заказ не был создан в системе Главпункт по причине: " . $ex->getMessage() .
                 ". Необходимо создать данный заказ вручную в ЛК Главпункт.";
@@ -326,7 +326,7 @@ class gpshippingShipping extends waShipping
                 array(
                     'serv' => 'курьерская доставка',
                     'barcode' => $order->items['sku'],
-                    'sku' => $this->getSku($order),
+                    'sku' => $this->sku($order),
                     'price' => is_null($order->paid_datetime) ? $order->total : 0,
                     'buyer_phone' => ifempty($order->shipping_address['phone'], $order->getContactField('phone')),
                     'buyer_fio' => ifempty($order->shipping_address['lastname'], $order->getContactField('lastname'))
@@ -374,7 +374,7 @@ class gpshippingShipping extends waShipping
                 array(
                     'serv' => 'выдача',
                     'pvz_id' => $order->shipping_rate_id,
-                    'sku' => $this->getSku($order),
+                    'sku' => $this->sku($order),
                     'price' => is_null($order->paid_datetime) ? $order->total : 0,
                     'buyer_phone' => ifempty($order->shipping_address['phone'], $order->getContactField('phone')),
                     'buyer_fio' => ifempty($order->shipping_address['lastname'], $order->getContactField('lastname'))
@@ -681,7 +681,7 @@ class gpshippingShipping extends waShipping
      * @param waOrder $order
      * @return string
      */
-    private function getSku(waOrder $order){
+    private function sku(waOrder $order){
         return $this->prefixId . substr($order->id_str, 1);
     }
 }
