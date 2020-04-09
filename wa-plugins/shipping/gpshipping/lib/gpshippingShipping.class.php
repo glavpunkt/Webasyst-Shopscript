@@ -286,7 +286,7 @@ class gpshippingShipping extends waShipping
     {
         try {
 
-            if ($this->apiLogin !== '' || !$this->apiToken == '') {
+            if ($this->apiLogin == '' || $this->apiToken == '') {
                 throw new waException('Апи или токен не установлены');
             }
 
