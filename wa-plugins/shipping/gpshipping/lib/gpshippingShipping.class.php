@@ -38,7 +38,7 @@ class gpshippingShipping extends waShipping
             // обязательное сообщение ошибки для пользователя
             $deliveries = array(
                 array(
-                    'rate'    => null,
+                    'rate' => null,
                     'comment' => 'Для расчета стоимости доставки укажите регион доставки',
                 ),
             );
@@ -79,7 +79,7 @@ class gpshippingShipping extends waShipping
      * @param string $cityTo название города назначения
      * @param string $cityFrom название город отправки из настроек
      * @return array
-     * @throws Exception
+     * @throws waException
      */
     private function punkts($cityTo, $cityFrom)
     {
@@ -94,7 +94,7 @@ class gpshippingShipping extends waShipping
         $price = $this->getTotalPrice();
         $data = array();
 
-        foreach ($punkts as $k => $v){
+        foreach ($punkts as $k => $v) {
             $data[$v['id']] = array(
                 'serv' => 'выдача',
                 'cityFrom' => $cityFrom,
@@ -125,7 +125,7 @@ class gpshippingShipping extends waShipping
         if (isset($tarif['tarifRange'])) {
             $url = 'https://glavpunkt.ru/api-1.1/get_tarifs';
             $tarif = $this->request($url, $data);
-            
+
             foreach ($tarif as $kTarif => $vTarif) {
                 foreach ($punkts as $k => $v) {
                     if ($kTarif == $k) {
@@ -147,7 +147,7 @@ class gpshippingShipping extends waShipping
      *
      * @param string $cityTo город назначения
      * @return array
-     * @throws Exception
+     * @throws waException
      */
     private function getArrayPickup($cityTo)
     {
@@ -159,28 +159,28 @@ class gpshippingShipping extends waShipping
             $additional .= (isset($v['phone']) && $v['phone'] != '' ? 'Телефон: ' . $v['phone'] . '; ' : '');
 
             $deliveries[$v['id']] = array(
-                    'name' => 'Пункт выдачи ' . (isset($v['metro']) ? $v['metro'] : $v['address']), //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                    'est_delivery' => $this->periodDelivery($v['delivery_period'], '0'), //произвольная строка, содержащая  информацию о примерном времени доставки
-                    'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                    'rate' => $this->finalTarif($v['tarif'], 'pickup'), //точная стоимость доставки
-                    'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                    'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
-                    'custom_data' => array(
-                        'pickup' => array(
-                            'id' => $v['id'],
-                            'lat' => $v['geo_lat'],
-                            'lng' => $v['geo_lng'],
-                            'additional' => $additional,
-                            'way' => $v['address'],
-                            'payment' => array(
-                                waShipping::PAYMENT_TYPE_CARD => (isset($v['card_accepted']) && $v['card_accepted'] == '1'),
-                                waShipping::PAYMENT_TYPE_CASH => true,
-                            ),
-                            'schedule' => $v['work_time'],
+                'name' => 'Пункт выдачи ' . (isset($v['metro']) ? $v['metro'] : $v['address']), //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+                'est_delivery' => $this->periodDelivery($v['delivery_period'], '0'), //произвольная строка, содержащая  информацию о примерном времени доставки
+                'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
+                'rate' => $this->finalTarif($v['tarif'], 'pickup'), //точная стоимость доставки
+                'type' => waShipping::TYPE_PICKUP, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
+                'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
+                'custom_data' => array(
+                    'pickup' => array(
+                        'id' => $v['id'],
+                        'lat' => $v['geo_lat'],
+                        'lng' => $v['geo_lng'],
+                        'additional' => $additional,
+                        'way' => $v['address'],
+                        'payment' => array(
+                            waShipping::PAYMENT_TYPE_CARD => (isset($v['card_accepted']) && $v['card_accepted'] == '1'),
+                            waShipping::PAYMENT_TYPE_CASH => true,
                         ),
+                        'schedule' => $v['work_time'],
                     ),
-                );
-            };
+                ),
+            );
+        };
 
         return $deliveries;
     }
@@ -190,7 +190,7 @@ class gpshippingShipping extends waShipping
      *
      * @param string $cityTo город назначения
      * @return array
-     * @throws Exception
+     * @throws waException
      */
     private function getArrayPost($cityTo)
     {
@@ -226,12 +226,12 @@ class gpshippingShipping extends waShipping
         }
 
         return $post = array(
-                'name' => 'Почта РФ', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
-                'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => $cost, //точная стоимость доставки
-                'type' => waShipping::TYPE_POST, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
+            'name' => 'Почта РФ', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+            'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
+            'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
+            'rate' => $cost, //точная стоимость доставки
+            'type' => waShipping::TYPE_POST, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
+            'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
     }
 
@@ -240,7 +240,7 @@ class gpshippingShipping extends waShipping
      *
      * @param string $cityTo город назначения
      * @return array
-     * @throws Exception
+     * @throws waException
      */
     private function getArrayTodoor($cityTo)
     {
@@ -264,15 +264,13 @@ class gpshippingShipping extends waShipping
 
         $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
 
-        //$tarif['tarif'] = $this->checkCostShipping($tarif['tarif']);
-
         return $todoor = array(
-                'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
-                'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
-                'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
-                'rate' => $this->finalTarif($tarif['tarif'], 'todoor'), //точная стоимость доставки
-                'type' => waShipping::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
-                'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
+            'name' => 'Курьерская доставка Главпункт', //название варианта доставки, например, “Наземный  транспорт”, “Авиа”, “Express Mail” и т. д.
+            'est_delivery' => $estDelivery, //произвольная строка, содержащая  информацию о примерном времени доставки
+            'currency' => $this->currency, //ISO3-код валюты, в которой рассчитана  стоимость  доставки
+            'rate' => $this->finalTarif($tarif['tarif'], 'todoor'), //точная стоимость доставки
+            'type' => waShipping::TYPE_TODOOR, //один из типов доставки waShipping::TYPE_TODOOR, waShipping::TYPE_PICKUP или waShipping::TYPE_POST
+            'service' => 'Главпункт', //название службы доставки для указания компании, выполняющей фактическую доставку
         );
     }
 
@@ -282,40 +280,71 @@ class gpshippingShipping extends waShipping
      * @param waOrder $order
      * @param array $shipping_data
      * @return null|string|string[] null, error or shipping data array
-     * @throws Exception
+     * @throws waException
      */
     protected function readyPackage(waOrder $order, $shipping_data = array())
     {
-        if ($this->apiLogin == '' || $this->apiToken == '') {
-            //@TODO сделать выброс ошибки
-            return null;
+        try {
+
+            if ($this->apiLogin == '' || $this->apiToken == '') {
+                throw new waException('Апи или токен не установлены');
+            }
+
+            switch ($order->params['shipping_rate_id']) {
+                case 'courier':
+                    $data = $this->courierRequestArrey($order);
+                    break;
+                case 'post':
+                    $data = $this->postRequestArrey($order);
+                    break;
+                default:
+                    $data = $this->pickupRequestArrey($order);
+                    break;
+            }
+
+            return $this->createShipment($data, $this->prefixId . $order->id);
+        } catch (waException $ex) {
+            return "Заказ не был создан в системе Главпункт по причине: " . $ex->getMessage() .
+                ". Необходимо создать данный заказ вручную в ЛК Главпункт.";
         }
-
-        switch ($order->params['shipping_rate_id']) {
-            case 'courier':
-                $data = $this->courierRequestArrey($order);
-                break;
-            case 'post':
-                $data = $this->postRequestArrey($order);
-                break;
-            default:
-                $data = $this->pickupRequestArrey($order);
-                break;
-        }
-
-        $this->createShipment($data);
-
-        return true; //@TODO сделать верный возврат значений
     }
 
     /**
      * Собирает массив с данными для выгрузки заказа курьерской доставкой
      *
      * @param waOrder $order
+     * @return array
      */
     private function courierRequestArrey(waOrder $order)
     {
-
+        $deliveresTime = explode('-', $order->shipping_params['desired_delivery.interval']);
+        return array(
+            'login' => $this->apiLogin, // логин интернет-магазина
+            'token' => $this->apiToken, // token для авторизации
+            'shipment_options' => $this->createShipmentOptions($order->id),
+            'orders' => array(
+                array(
+                    'serv' => 'курьерская доставка',
+                    'barcode' => $order->items['sku'],
+                    'sku' => $this->prefixId . $order->id,
+                    'price' => is_null($order->paid_datetime) ? $order->total : 0,
+                    'buyer_phone' => ifempty($order->shipping_address['phone'], $order->getContactField('phone')),
+                    'buyer_fio' => ifempty($order->shipping_address['lastname'], $order->getContactField('lastname'))
+                        . ' ' . ifempty($order->shipping_address['firstname'], $order->getContactField('firstname')),
+                    'buyer_email' => ifempty($order->shipping_address['email'], $order->getContactField('email')),
+                    'insurance_val' => $order->subtotal, // Оценочная (страховая) стоимость заказа
+                    'weight' => $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight(),// Общий вес заказа в кг.
+                    "delivery" => array( // Параметры курьерской доставки
+                        "city" => $this->getAddress('city'), // Кладр города (или "SPB" или "Санкт-Петербург").
+                        "address" => $this->getAddress('street'),
+                        "date" => $order->shipping_params['desired_delivery.date'],
+                        "time_from" => $deliveresTime[0],
+                        "time_to" => $deliveresTime[1]
+                    ),
+                    'parts' => $this->createParts($order)
+                )
+            ),
+        );
     }
 
     /**
@@ -387,8 +416,6 @@ class gpshippingShipping extends waShipping
                 );
                 break;
         }
-
-
     }
 
     /**
@@ -420,16 +447,16 @@ class gpshippingShipping extends waShipping
 
     /**
      * Выполнение запроса
-     * 
-     * @param string $url 
+     *
+     * @param string $url
      * @param array $data массив параметров для передачи POST запросом
      * @return array
-     * @throws Exception
+     * @throws waException
      */
     private function request($url, $data = null)
     {
         $curl = curl_init($url);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER,true);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
         if (!is_null($data)) {
             $encodeData = json_encode($data);
@@ -442,7 +469,7 @@ class gpshippingShipping extends waShipping
         $res = json_decode($out, true);
 
         if (is_null($res)) {
-            throw new Exception('Неверный JSON ответ: ' . $out);
+            throw new waException('Неверный JSON ответ: ' . $out);
         }
 
         return $res;
@@ -468,6 +495,57 @@ class gpshippingShipping extends waShipping
                 'zip' => array('cost' => true, 'required' => true)
             );
         }
+    }
+
+    /**
+     * Создание дополнительного поля
+     *
+     * @param waOrder $order
+     * @param array $service
+     * @return array
+     */
+    public function customFieldsForService(waOrder $order, $service)
+    {
+        if ($service['type'] == 'todoor') {
+            $fields = parent::customFieldsForService($order, $service);
+
+            $setting = $this->getSettings('customer_interval');
+
+            if (!empty($setting['interval']) || !empty($setting['date'])) {
+                if (!strlen($this->delivery_time)) {
+                    $from = time();
+                } else {
+                    $from = strtotime(preg_replace('@,.+$@', '', $this->delivery_time));
+                }
+                $offset = max(0, ceil(($from - time()) / (24 * 3600)));
+                $shipping_params = $order->shipping_params;
+                $value = array();
+
+                if (!empty($shipping_params['desired_delivery.interval'])) {
+                    $value['interval'] = $shipping_params['desired_delivery.interval'];
+                }
+                if (!empty($shipping_params['desired_delivery.date_str'])) {
+                    $value['date_str'] = $shipping_params['desired_delivery.date_str'];
+                }
+                if (!empty($shipping_params['desired_delivery.date'])) {
+                    $value['date'] = $shipping_params['desired_delivery.date'];
+                }
+
+                $fields['desired_delivery'] = array(
+                    'value' => $value,
+                    'title' => 'Желаемая дата доставки',
+                    'control_type' => waHtmlControl::DATETIME,
+                    'params' => array(
+                        'date' => empty($setting['date']) ? null : ifempty($offset, 0),
+                        'interval' => ifset($setting['interval']),
+                        'intervals' => ifset($setting['intervals']),
+                    ),
+                );
+            }
+
+            return $fields;
+        }
+        return array();
     }
 
     /**
@@ -504,7 +582,7 @@ class gpshippingShipping extends waShipping
      */
     private function printDescriptionForOneDay($num)
     {
-        return "$num "  . ($num >= 5
+        return "$num " . ($num >= 5
                 ? 'дней'
                 : ($num > 1 ? 'дня' : 'день')
             );
@@ -514,16 +592,27 @@ class gpshippingShipping extends waShipping
      * Собирает параметры для выгрузи в ЛК Главпункт и отправляет
      *
      * @param array $data
+     * @param string $sku
      * @return array
-     * @throws Exception
+     * @throws waException
      */
-    private function createShipment($data)
+    private function createShipment($data, $sku)
     {
         $url = 'https://glavpunkt.ru/api/create_shipment';
 
-        $result = $this->request($url, $data);
+        $answer = $this->request($url, $data);
 
-        return $result;
+        if ($answer['result'] == 'error') {
+            throw new waException($answer['message']);
+        } else {
+            $trackcode = $answer['pkgs'][$sku]['track_code'];
+            return array(
+                'order_id' => $trackcode,
+                'status' => 'none',
+                'view_data' => "Cоздан заказ в накладной " . $answer['docnum'] . " с треккодом $trackcode ",
+                'tracking_number' => $trackcode,
+            );
+        }
     }
 
     /**
@@ -532,7 +621,7 @@ class gpshippingShipping extends waShipping
      * @param string $tarif
      * @param string $typeDelivery $this->getAddress('city')
      * @return integer
-     * @throws Exception
+     * @throws waException
      */
     private function finalTarif($tarif, $typeDelivery)
     {
@@ -561,7 +650,7 @@ class gpshippingShipping extends waShipping
                 }
                 break;
             default:
-                throw new Exception('Неизвестный тип доставки');
+                throw new waException('Неизвестный тип доставки');
         }
 
         return number_format($finalTarif, 2);
