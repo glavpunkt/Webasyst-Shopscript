@@ -127,7 +127,7 @@ return array(
         'value'        => '',
     ),
     'customer_interval' => array(
-        'title'        => 'Желаемое время доставки и график работы',
+        'title'        => 'Доступные даты и интервалы курьерской доставки',
         'control_type' => 'DeliveryIntervalControl',
         'minutes'      => false,
     ),

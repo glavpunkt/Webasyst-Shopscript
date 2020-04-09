@@ -302,10 +302,8 @@ class gpshippingShipping extends waShipping
                     break;
             }
 
-            return $this->createShipment($data);
-
+            return $this->createShipment($data, $this->prefixId . $order->id);
         } catch (waException $ex) {
-
             return $ex->getMessage();
         }
     }
@@ -593,21 +591,26 @@ class gpshippingShipping extends waShipping
      * Собирает параметры для выгрузи в ЛК Главпункт и отправляет
      *
      * @param array $data
-     * @return string
+     * @param string $sku
+     * @return array
      * @throws waException
      */
-    private function createShipment($data)
+    private function createShipment($data, $sku)
     {
         $url = 'https://glavpunkt.ru/api/create_shipment';
 
         $answer = $this->request($url, $data);
 
         if ($answer['result'] == 'error') {
-
-            return $answer['message'];
+            throw new waException($answer['message']);
         } else {
-
-            return 'номер созданной поставки (накладной)' .  $answer['docnum'];
+            $trackcode = $answer['pkgs'][$sku]['track_code'];
+            return array(
+                'order_id' => $trackcode,
+                'status' => 'none',
+                'view_data' => "Cоздан заказ в накладной " . $answer['docnum'] . " с треккодом $trackcode ",
+                'tracking_number' => $trackcode,
+            );
         }
     }
 
