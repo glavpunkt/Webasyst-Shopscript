@@ -354,7 +354,27 @@ class gpshippingShipping extends waShipping
      */
     private function postRequestArrey(waOrder $order)
     {
-
+        $adrress = $this->getAddress('zip') . ', ' . $this->getAddress('city') . ', ' . $this->getAddress('street');
+        return array(
+            'login' => $this->apiLogin, // логин интернет-магазина
+            'token' => $this->apiToken, // token для авторизации
+            'shipment_options' => $this->createShipmentOptions(),
+            'orders' => array(
+                array(
+                    'serv' => 'почта',
+                    'sku' => $this->sku($order),
+                    'price' => is_null($order->paid_datetime) ? $order->total : 0,
+                    'insurance_val' => $order->subtotal,
+                    'buyer_phone' => ifempty($order->shipping_address['phone'], $order->getContactField('phone')),
+                    'weight' => $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight(),
+                    'pochta' => array(
+                        'address' => $adrress,
+                        'index' => $this->getAddress('zip')
+                    ),
+                    'parts' => $this->createParts($order)
+                )
+            ),
+        );
     }
 
     /**
@@ -491,7 +511,9 @@ class gpshippingShipping extends waShipping
         } elseif ($service['type'] == 'post') {
 
             return array(
-                'zip' => array('cost' => true, 'required' => true)
+                'zip' => array('cost' => true, 'required' => true),
+                'street' => array('required' => true),
+                'city' => array('required' => true)
             );
         }
     }
@@ -544,6 +566,7 @@ class gpshippingShipping extends waShipping
 
             return $fields;
         }
+
         return array();
     }
 
@@ -682,6 +705,6 @@ class gpshippingShipping extends waShipping
      * @return string
      */
     private function sku(waOrder $order){
-        return $this->prefixId . substr($order->id_str, 1);
+        return $this->prefixId . substr($order->id_str, 1); //в $order->id_str первый знак '#', его надо обрезать
     }
 }
