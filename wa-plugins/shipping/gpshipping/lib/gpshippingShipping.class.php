@@ -354,7 +354,7 @@ class gpshippingShipping extends waShipping
      */
     private function postRequestArrey(waOrder $order)
     {
-        $adrress = $this->getAddress('zip') . ', ' . 'Россия, ' . $this->getAddress('city') . ', ' . $this->getAddress('street');
+        $adrress = $this->getAddress('zip') . ', ' . $this->getAddress('city') . ', ' . $this->getAddress('street');
         return array(
             'login' => $this->apiLogin, // логин интернет-магазина
             'token' => $this->apiToken, // token для авторизации
