@@ -211,6 +211,7 @@ class gpshippingShipping extends waShipping
                 'index' => $zip,
                 'paymentType' => 'cash',
                 'weight' => $weight,
+                'fullRko' => true,
                 'price' => $this->getTotalPrice()
             );
 
@@ -252,6 +253,7 @@ class gpshippingShipping extends waShipping
             'serv' => 'курьерская доставка',
             'paymentType' => 'cash',
             'weight' => $weight,
+            'fullRko' => true,
             'price' => $this->getTotalPrice()
         );
 
