@@ -419,7 +419,7 @@ class gpshippingShipping extends waShipping
             case 'self_delivery':
                 return array(
                     'method' => $this->methodDelivery,
-                    'punkt_id' => 'Moskovskaya-A16'
+                    'punkt_id' => $this->selectedPunkt
                 );
                 break;
             case 'pickup':
@@ -706,5 +706,22 @@ class gpshippingShipping extends waShipping
      */
     private function sku(waOrder $order){
         return $this->prefixId . substr($order->id_str, 1); //в $order->id_str первый знак '#', его надо обрезать
+    }
+
+    /**
+     * Возвращает массив с доступными пунктами отгрузки
+     *
+     * @return array
+     */
+    public static function punktList()
+    {
+        $data = array();
+        $punkts = (new gpshippingShipping)->request('http://glavpunkt.ru/api/punkts/priemka');
+
+        foreach ($punkts as $punkt) {
+            array_push($data, array('value' => $punkt['id'], 'title' => $punkt['metro'], 'description' => ''));
+        }
+
+        return $data;
     }
 }

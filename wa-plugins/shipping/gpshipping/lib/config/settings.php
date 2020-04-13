@@ -131,4 +131,11 @@ return array(
         'control_type' => 'DeliveryIntervalControl',
         'minutes'      => false,
     ),
+    'selectedPunkt' => array(
+        'value'            => '',
+        'options_callback' => array($this, 'punktList'),
+        'title'            => 'Выберите пунтк отгрузки заказов',
+        'description'      => '',
+        'control_type'     => waHtmlControl::SELECT,
+    ),
 );
