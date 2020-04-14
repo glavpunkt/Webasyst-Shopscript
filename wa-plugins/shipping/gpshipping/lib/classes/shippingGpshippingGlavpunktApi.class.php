@@ -6,7 +6,7 @@
  * Class GlavpunktApi
  * @author SokolovMikhail
  */
-class GlavpunktApi
+class shippingGpshippingGlavpunktApi
 {
     /**
      * Собирает параметры для выгрузи в ЛК Главпункт и отправляет
