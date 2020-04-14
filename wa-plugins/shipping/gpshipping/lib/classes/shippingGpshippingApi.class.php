@@ -3,10 +3,10 @@
 /**
  * Класс взаимодействия с API Главпункт
  *
- * Class GlavpunktApi
+ * Class shippingGpshippingApi
  * @author SokolovMikhail
  */
-class shippingGpshippingGlavpunktApi
+class shippingGpshippingApi
 {
     /**
      * Собирает параметры для выгрузи в ЛК Главпункт и отправляет
