@@ -82,9 +82,62 @@ class gpshippingShipping extends waShipping
      */
     private function getArrayPickup($cityTo)
     {
-        $tarifForPunktsInSelectedCity = (new gpsgippingShippingApi($this))->punkts($cityTo, $this->cityFrom);
+        $glavpunktApi = new glavpunktShippingApi($this);
 
-        foreach ($tarifForPunktsInSelectedCity as $k => $v) {
+        $params = array(
+            'cityFrom' => $this->cityFrom,
+            'cityTo' => $this->getAddress('city')
+        );
+        $punkts = $glavpunktApi->getPunkts($params);
+
+        $weight = $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight();
+        $price = $this->getTotalPrice();
+        $data = array();
+
+        foreach ($punkts as $k => $v) {
+            $data[$v['id']] = array(
+                'serv' => 'выдача',
+                'cityFrom' => $this->cityFrom,
+                'cityTo' => $cityTo,
+                'weight' => $weight,
+                'price' => $price,
+                'punktId' => $v['id'],
+                'paymentType' => 'cash'
+            );
+        }
+
+        $params = array(
+            'cityFrom' => $this->cityFrom,
+            'cityTo' => $this->getAddress('city'),
+            'serv' => 'выдача',
+            'paymentType' => 'cash',
+            'weight' => $weight,
+            'price' => $price
+        );
+
+        if (isset($this->costOfTransfer['on'])) {
+            $params['transfer'] = 'on';
+        }
+
+        $tarifForCity = $glavpunktApi->getTarifForCity($params);
+
+        if (isset($tarifForCity['tarifRange'])) {
+            $tarifForCity = $glavpunktApi->getTarifsForCity($data);
+
+            foreach ($tarifForCity as $kTarif => $vTarif) {
+                foreach ($punkts as $k => $v) {
+                    if ($kTarif == $k) {
+                        $punkts[$k]['tarif'] = $vTarif['tarif'];
+                    }
+                }
+            }
+        } else {
+            foreach ($punkts as $k => $v) {
+                $punkts[$k]['tarif'] = $tarifForCity['tarif'];
+            }
+        }
+
+        foreach ($punkts as $k => $v) {
 
             $additional = (isset($v['email']) && $v['email'] != '' ? 'Email: ' . $v['email'] . '; ' : '');
             $additional .= (isset($v['phone']) && $v['phone'] != '' ? 'Телефон: ' . $v['phone'] . '; ' : '');
@@ -147,7 +200,7 @@ class gpshippingShipping extends waShipping
             );
 
             $url = 'https://glavpunkt.ru/api/get_pochta_tarif?' . http_build_query($params);
-            $tarif = (new gpsgippingShippingApi($this))->request($url);
+            $tarif = (new glavpunktShippingApi($this))->request($url);
 
             if ($tarif['result'] == 'error') {
                 return null;
@@ -189,7 +242,7 @@ class gpshippingShipping extends waShipping
         );
 
         $url = 'https://glavpunkt.ru/api-1.1/get_tarif?' . http_build_query($params);
-        $tarif = (new gpsgippingShippingApi($this))->request($url);
+        $tarif = (new glavpunktShippingApi($this))->request($url);
 
         if ($tarif['result'] == 'error') {
             return null;
@@ -235,7 +288,19 @@ class gpshippingShipping extends waShipping
                     break;
             }
 
-            return (new gpsgippingShippingApi)->createShipment($data, $this->sku($order));
+            $answer = (new glavpunktShippingApi)->createShipment($data);
+
+            if ($answer['result'] == 'error') {
+                throw new waException($answer['message']);
+            } else {
+                $trackcode = $answer['pkgs'][$this->sku($order)]['track_code'];
+                return array(
+                    'order_id' => $trackcode,
+                    'status' => 'none',
+                    'view_data' => "Cоздан заказ в накладной " . $answer['docnum'] . " с треккодом $trackcode ",
+                    'tracking_number' => $trackcode,
+                );
+            }
         } catch (waException $ex) {
             return "Заказ не был создан в системе Главпункт по причине: " . $ex->getMessage() .
                 ". Необходимо создать данный заказ вручную в ЛК Главпункт.";
@@ -588,10 +653,18 @@ class gpshippingShipping extends waShipping
      * Возвращает массив с доступными пунктами отгрузки
      *
      * @return array
+     * @throws waException
      */
     public static function punktList()
     {
-        return (new gpsgippingShippingApi)->punktList();
+        $punkts = (new glavpunktShippingApi)->punktList();
+        $data = array();
+
+        foreach ($punkts as $punkt) {
+            array_push($data, array('value' => $punkt['id'], 'title' => $punkt['metro'], 'description' => ''));
+        }
+
+        return $data;
     }
 
     ###############
