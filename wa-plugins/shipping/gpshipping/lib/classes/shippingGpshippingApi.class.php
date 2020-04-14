@@ -3,7 +3,6 @@
 /**
  * Класс взаимодействия с API Главпункт
  *
- * Class shippingGpshippingApi
  * @author SokolovMikhail
  */
 class shippingGpshippingApi
