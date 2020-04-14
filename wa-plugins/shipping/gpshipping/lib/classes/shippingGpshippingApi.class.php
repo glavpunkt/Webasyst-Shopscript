@@ -3,10 +3,20 @@
 /**
  * Класс взаимодействия с API Главпункт
  *
+ * Class shippingGpshippingApi
  * @author SokolovMikhail
  */
 class shippingGpshippingApi
 {
+    protected $login;
+    protected $token;
+
+    public function __construct($login = '', $token = '')
+    {
+        $this->login = $login;
+        $this->token = $token;
+    }
+
     /**
      * Собирает параметры для выгрузи в ЛК Главпункт и отправляет
      *
