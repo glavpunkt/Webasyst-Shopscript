@@ -1,20 +1,13 @@
 <?php
 
 /**
- * Класс API взаимодействие с Glavpunkt
+ * Класс взаимодействия с API Главпункт
  *
  * Class gpsgippingShippingApi
  * @author SokolovMikhail
  */
 class glavpunktShippingApi
 {
-    protected $gp = null;
-
-    public function __construct(gpshippingShipping $gpShipping = null)
-    {
-        $this->gp = $gpShipping;
-    }
-
     /**
      * Собирает параметры для выгрузи в ЛК Главпункт и отправляет
      *
