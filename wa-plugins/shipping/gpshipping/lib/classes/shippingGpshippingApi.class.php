@@ -12,10 +12,10 @@ class shippingGpshippingApi
     protected $token;
     private $baseUrl = 'https://glavpunkt.ru';
 
-    public function __construct(gpshippingShipping $glavpunkt = null)
+    public function __construct(gpshippingShipping $shipping = null)
     {
-        $this->login = isset($glavpunkt) ? $glavpunkt->apiLogin : null;
-        $this->token = isset($glavpunkt) ? $glavpunkt->apiToken : null;
+        $this->login = isset($shipping) ? $shipping->apiLogin : null;
+        $this->token = isset($shipping) ? $shipping->apiToken : null;
     }
 
     /**
