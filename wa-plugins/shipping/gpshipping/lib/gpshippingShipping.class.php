@@ -199,7 +199,7 @@ class gpshippingShipping extends waShipping
                 'price' => $this->getTotalPrice()
             );
 
-            $url = 'https://glavpunkt.ru/api/get_pochta_tarif?' . http_build_query($params);
+            $url = '/api/get_pochta_tarif?' . http_build_query($params);
             $tarif = (new shippingGpshippingApi($this))->request($url);
 
             if ($tarif['result'] == 'error') {
@@ -241,7 +241,7 @@ class gpshippingShipping extends waShipping
             'price' => $this->getTotalPrice()
         );
 
-        $url = 'https://glavpunkt.ru/api-1.1/get_tarif?' . http_build_query($params);
+        $url = '/api-1.1/get_tarif?' . http_build_query($params);
         $tarif = (new shippingGpshippingApi($this))->request($url);
 
         if ($tarif['result'] == 'error') {
