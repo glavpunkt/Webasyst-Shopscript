@@ -82,7 +82,7 @@ class gpshippingShipping extends waShipping
      */
     private function getArrayPickup($cityTo)
     {
-        $glavpunktApi = new shippingGpshippingApi($this->apiLogin, $this->apiToken);
+        $glavpunktApi = new shippingGpshippingApi($this);
 
         $params = array(
             'cityFrom' => $this->cityFrom,
@@ -199,8 +199,8 @@ class gpshippingShipping extends waShipping
                 'price' => $this->getTotalPrice()
             );
 
-            $url = 'https://glavpunkt.ru/api/get_pochta_tarif?' . http_build_query($params);
-            $tarif = (new shippingGpshippingApi($this->apiLogin, $this->apiToken))->request($url);
+            $url = '/api/get_pochta_tarif?' . http_build_query($params);
+            $tarif = (new shippingGpshippingApi($this))->request($url);
 
             if ($tarif['result'] == 'error') {
                 return null;
@@ -241,8 +241,8 @@ class gpshippingShipping extends waShipping
             'price' => $this->getTotalPrice()
         );
 
-        $url = 'https://glavpunkt.ru/api-1.1/get_tarif?' . http_build_query($params);
-        $tarif = (new shippingGpshippingApi($this->apiLogin, $this->apiToken))->request($url);
+        $url = '/api-1.1/get_tarif?' . http_build_query($params);
+        $tarif = (new shippingGpshippingApi($this))->request($url);
 
         if ($tarif['result'] == 'error') {
             return null;
@@ -288,7 +288,7 @@ class gpshippingShipping extends waShipping
                     break;
             }
 
-            $answer = (new shippingGpshippingApi($this->apiLogin, $this->apiToken))->createShipment($data);
+            $answer = (new shippingGpshippingApi($this))->createShipment($data);
 
             if ($answer['result'] == 'error') {
                 throw new waException($answer['message']);
