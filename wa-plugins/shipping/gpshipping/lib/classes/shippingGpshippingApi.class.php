@@ -12,10 +12,10 @@ class shippingGpshippingApi
     protected $token;
     private $baseUrl = 'https://glavpunkt.ru';
 
-    public function __construct(gpshippingShipping $glabpunkt = null)
+    public function __construct(gpshippingShipping $glavpunkt = null)
     {
-        $this->login = isset($glabpunkt) ? $glabpunkt->apiLogin : null;
-        $this->token = isset($glabpunkt) ? $glabpunkt->apiToken : null;
+        $this->login = isset($glavpunkt) ? $glavpunkt->apiLogin : null;
+        $this->token = isset($glavpunkt) ? $glavpunkt->apiToken : null;
     }
 
     /**
@@ -27,7 +27,7 @@ class shippingGpshippingApi
      */
     public function createShipment($data)
     {
-        return $this->request($this->baseUrl . '/api/create_shipment', $data);
+        return $this->request('/api/create_shipment', $data);
     }
 
     /**
@@ -38,7 +38,7 @@ class shippingGpshippingApi
      */
     public function punktList()
     {
-        return $this->request('http://glavpunkt.ru/api/punkts/priemka');
+        return $this->request('/api/punkts/priemka');
     }
 
     /**
@@ -50,7 +50,7 @@ class shippingGpshippingApi
      */
     public function getPunkts($params)
     {
-       return $this->request($this->baseUrl . '/api/pvz_list?' . http_build_query($params));
+       return $this->request('/api/pvz_list?' . http_build_query($params));
     }
 
     /**
@@ -62,7 +62,7 @@ class shippingGpshippingApi
      */
     public function getTarifForCity($params)
     {
-        return $this->request($this->baseUrl . '/api/get_tarif?' . http_build_query($params));
+        return $this->request('/api/get_tarif?' . http_build_query($params));
     }
 
     /**
@@ -74,7 +74,7 @@ class shippingGpshippingApi
      */
     public function getTarifsForCity($params)
     {
-        return $this->request($this->baseUrl . '/api-1.1/get_tarifs', $params);
+        return $this->request('/api-1.1/get_tarifs', $params);
     }
 
     /**
@@ -87,7 +87,7 @@ class shippingGpshippingApi
      */
     public function request($url, $data = null)
     {
-        $curl = curl_init($url);
+        $curl = curl_init($this->baseUrl . $url);
         curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
 
         if (!is_null($data)) {
