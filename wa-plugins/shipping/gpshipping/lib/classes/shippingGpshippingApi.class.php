@@ -62,7 +62,7 @@ class shippingGpshippingApi
      */
     public function getTarifForCity($params)
     {
-        return $this->request('/api/get_tarif?' . http_build_query($params));
+        return $this->request('/api-1.1/get_tarif?' . http_build_query($params));
     }
 
     /**
@@ -108,12 +108,16 @@ class shippingGpshippingApi
 
         $out = curl_exec($curl);
         curl_close($curl);
-        $res = json_decode($out, true);
+        $answer = json_decode($out, true);
 
-        if (is_null($res)) {
+        if (is_null($answer)) {
             throw new waException('Неверный JSON ответ: ' . $out);
         }
 
-        return $res;
+        if (isset($answer['result']) && $answer['result'] == 'error') {
+            throw new waException($answer['message']);
+        }
+
+        return $answer;
     }
 }

@@ -28,11 +28,11 @@ class gpshippingShipping extends waShipping
             }
 
             if (isset($this->optionsDelivery['post'])) {
-                $deliveries['post'] = $this->getArrayPost($cityTo);
+                $deliveries['post'] = $this->getArrayPost();
             }
 
             if (isset($this->optionsDelivery['courier'])) {
-                $deliveries['courier'] = $this->getArrayTodoor($cityTo);
+                $deliveries['courier'] = $this->getArrayTodoor();
             }
         } else {
             // обязательное сообщение ошибки для пользователя
@@ -176,7 +176,7 @@ class gpshippingShipping extends waShipping
      * @return array
      * @throws waException
      */
-    private function getArrayPost($cityTo)
+    private function getArrayPost()
     {
         $weight = $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight();
         $zip = $this->getAddress('zip');
@@ -202,10 +202,6 @@ class gpshippingShipping extends waShipping
             $url = '/api/get_pochta_tarif?' . http_build_query($params);
             $tarif = (new shippingGpshippingApi($this))->request($url);
 
-            if ($tarif['result'] == 'error') {
-                return null;
-            }
-
             $cost = $this->finalTarif($tarif['tarifTotal'], 'post');
             $estDelivery = $this->periodDelivery($tarif['period'], '0');
         }
@@ -227,7 +223,7 @@ class gpshippingShipping extends waShipping
      * @return array
      * @throws waException
      */
-    private function getArrayTodoor($cityTo)
+    private function getArrayTodoor()
     {
         $weight = $this->getTotalWeight() == 0 ? $this->weightDefault : $this->getTotalWeight();
 
@@ -243,10 +239,6 @@ class gpshippingShipping extends waShipping
 
         $url = '/api-1.1/get_tarif?' . http_build_query($params);
         $tarif = (new shippingGpshippingApi($this))->request($url);
-
-        if ($tarif['result'] == 'error') {
-            return null;
-        }
 
         $estDelivery = $this->periodDelivery($tarif['period'], $this->daysForCourier);
 
