@@ -464,4 +464,18 @@ class gpshippingShipping extends waShipping
 
         return $data;
     }
+
+    ###############
+    # MAKE PUBLIC #
+    ###############
+
+    public function getTotalWeight()
+    {
+        return parent::getTotalWeight();
+    }
+
+    public function getAddress($field = null)
+    {
+        return parent::getAddress($field);
+    }
 }
