@@ -14,6 +14,7 @@ class gpshippingShipping extends waShipping
 {
     /**
      * Расчёт стоимости доставки и вывод её
+     * Обязательный метод
      *
      * @return array
      */
