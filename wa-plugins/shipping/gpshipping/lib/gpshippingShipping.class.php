@@ -408,7 +408,7 @@ class gpshippingShipping extends waShipping
                 } elseif ($this->getAddress('city') == 'Санкт-Петербург') {
                     $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupTodoorSPB);
                 } else {
-                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupTodoorCommon);
+                    $finalTarif = $this->correctTarif($tarif, '', '', $this->markupTodoorCommon);
                 }
                 break;
             case 'pickup':
@@ -417,7 +417,7 @@ class gpshippingShipping extends waShipping
                 } elseif ($this->getAddress('city') == 'Санкт-Петербург') {
                     $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupPickupSPB);
                 } else {
-                    $finalTarif = $this->correctTarif($tarif, $this->freeShippingSPB, $this->fixedShippingSPB, $this->markupPickupCommon);
+                    $finalTarif = $this->correctTarif($tarif, '', '', $this->markupPickupCommon);
                 }
                 break;
             default:
