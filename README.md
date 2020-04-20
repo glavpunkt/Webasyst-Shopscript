@@ -1,31 +1,31 @@
 #Приложение Webasyst-Shopscript v2
 
 # Структура
-1. /_img_ Папка с лого
-2. /_lib_ Основная папка с классами
+1. /img Папка с лого и остальных изображений
+2. /lib Основная папка с классами
 
-    2.1 _Classes_ Папка для дополнительных классов плагина
+    2.1 Classes Папка для дополнительных классов плагина
     
-    2.2 _config_ Обязательная папка с конфигурационными файлами
+    2.2 config Обязательная папка с конфигурационными файлами
     
 # Файлы
 
-1. gpshippingShipping.class.php Основной класс
-2. plugin.php Общие параметры плагина
-3. settings.php Настройки плагина. Не может быть пустым
+1. `gpshippingShipping.class.php` Основной класс
+2. `plugin.php` Общие параметры плагина
+3. `settings.php` Настройки плагина. Не может быть пустым
 
 # Методы и хуки в основном классе
 
-1. calculate() Обязательный метод. Возвращает массив с возможными доставками. Точка входа
-2. allowedCurrency() и allowedWeightUnit () Обязательные методы. Возвращают текущую валюту и единицу веса.
-3. readyPackage() Хук, срабатывает сразу ПОСЛЕ того как заказ в админке переводится в статус отправлен
-4. requestedAddressFieldsForService() и customFieldsForService() Опциональные методы. Позволяют устанавливают дополнительные поля в зависимости от типа доставки.
+1. `calculate()` Обязательный метод. Возвращает массив с возможными доставками. Точка входа
+2. `allowedCurrency()` и `allowedWeightUnit ()` Обязательные методы. Возвращают текущую валюту и единицу веса.
+3. `readyPackage()` Хук, срабатывает сразу ПОСЛЕ того как заказ в админке переводится в статус отправлен
+4. `requestedAddressFieldsForService()` и `customFieldsForService()` Опциональные методы. Позволяют устанавливают дополнительные поля в зависимости от типа доставки.
 
-    4.1 requestedAddressFieldsForService() Устанавливат дополнительные обязательные поля 
+    4.1 `requestedAddressFieldsForService()` Устанавливат дополнительные обязательные поля 
     
-    4.2 customFieldsForService() Добавляет форму с выбором даты и интервала доставки для курьерской доставки
+    4.2 `customFieldsForService()` Добавляет форму с выбором даты и интервала доставки для курьерской доставки
     
-5. punktList() функция callback для файла настроек, возвращает список с доступными пунктами отгрузки заказа. Должен быть static
+5. `punktList()` функция callback для файла настроек, возвращает список с доступными пунктами отгрузки заказа. Должен быть static
 
 # Инструкция по использованию
 1. Установить из магазина приложений 'Инсталлер'
@@ -44,4 +44,6 @@
 
 # Полезные ссылки на документацию
 <a href="https://developers.webasyst.ru/docs/cookbook/plugins/shipping-plugins/">Разработка плагина доставки Shop-Script 8</a><br>
-<a href="https://developers.webasyst.ru/forum/19278/shipping-plugins-new-features/">Документация о состояниях (статусах) заказа</a>
+<a href="https://developers.webasyst.ru/forum/19278/shipping-plugins-new-features/">Документация о состояниях (статусах) заказа</a><br>
+<a href="https://github.com/webasyst/webasyst-framework/tree/master/wa-plugins/shipping">Примеры схожих плагинов(rassianpost, yandexdelivery и boxberry)</a><br>
+<a href="https://developers.webasyst.ru/docs/store/webasyst-store-requirements/">Требования к размещению в магазине Webasyst</a><br>
