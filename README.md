@@ -39,9 +39,9 @@
 ![скриншот](https://user-images.githubusercontent.com/28548919/79769601-0181a380-8335-11ea-88ce-898cd9b38fd0.png)
 Для курьерской доставки необходимо указать дату доставки. 
 ![скриншот](https://user-images.githubusercontent.com/28548919/79769700-1f4f0880-8335-11ea-94cc-63b836f71d96.png)
-Результат выгрузки будет виден после обновления заказа в разделе отправленын, в нижней части страницы с заказом.
+Результат выгрузки будет виден после обновления заказа в разделе отправлен, в нижней части страницы с заказом.
 ![скриншот](https://user-images.githubusercontent.com/28548919/79769970-7228c000-8335-11ea-9d22-f7faef5a4583.png)
 
 #Полезные ссылки на документацию
-<a href="https://developers.webasyst.ru/docs/cookbook/plugins/shipping-plugins/">Разработка плагина доставки Shop-Script 8</a>
+<a href="https://developers.webasyst.ru/docs/cookbook/plugins/shipping-plugins/">Разработка плагина доставки Shop-Script 8</a><br>
 <a href="https://developers.webasyst.ru/forum/19278/shipping-plugins-new-features/">Документация о состояниях (статусах) заказа</a>
