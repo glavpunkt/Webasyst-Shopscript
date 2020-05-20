@@ -5,9 +5,9 @@ return array(
     'icon' => 'img/logo16.png',
     'logo' => 'img/logo.png',
     'vendor' => '1122018',
-    'version' => '0.0.1',
-    'external' => true, //необязательный параметр
-    'external_tracking' => true, //необязательный параметр
-    'services_by_type' => true, //необязательный параметр
+    'version' => '1.0.0',
+    'external' => true,
+    'external_tracking' => true,
+    'services_by_type' => true,
     'custom_settings' => true,
 );
